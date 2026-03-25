@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>同飞后台管理系统 - 登录</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background-color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h3 class="text-center mb-4">TONFY CMS 登录</h3>
+      <form id="loginForm">
+        <div class="mb-3">
+          <label class="form-label">账号</label>
+          <input
+            type="text"
+            class="form-control"
+            id="username"
+            placeholder="请输入 admin"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">密码</label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            placeholder="请输入 123456"
+            required
+          />
+        </div>
+        <div id="error-msg" class="text-danger mb-3" style="display: none; font-size: 0.9em"></div>
+        <button type="submit" class="btn btn-primary w-100">登 录</button>
+      </form>
+    </div>
+
+    <script>
+      document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault(); // 阻止表单默认提交刷新页面
+
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const errorMsg = document.getElementById('error-msg');
+
+        try {
+          // 请求我们刚才写的 Go 登录接口
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            // 登录成功，将 Token 存入浏览器的 localStorage
+            localStorage.setItem('cms_token', result.token);
+            // 跳转到后台管理主页
+            window.location.href = '/admin/index.html';
+          } else {
+            // 登录失败，显示错误信息
+            errorMsg.innerText = result.error || '登录失败';
+            errorMsg.style.display = 'block';
+          }
+        } catch (error) {
+          errorMsg.innerText = '网络请求失败，请检查后端服务';
+          errorMsg.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -4,3 +4,5 @@
 *.db
 *.png
 *.jpg
+*.webp
+*.DS_Store

@@ -24,7 +24,7 @@ func main() {
 	e.Use(middleware.Logger())  // 自动打印每一次请求的超美观日志
 	e.Use(middleware.Recover()) // 防止因为某个接口报错导致整个程序崩溃
 	
-	// 4. 配置跨域 CORS (官方提供，一行代码搞定)
+	// 4. 配置跨域 CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"}, // 允许所有前端跨域请求
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},

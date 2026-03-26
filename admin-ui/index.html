@@ -1,118 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>同飞后台管理系统 - 新闻管理</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<nav class="navbar navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="https://unpkg.com/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+      <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">TONFY CMS - 后台管理</span>
         <button class="btn btn-outline-light btn-sm" onclick="logout()">退出登录</button>
-    </div>
-</nav>
+      </div>
+    </nav>
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>新闻列表</h4>
         <button class="btn btn-success" onclick="openAddModal()">+ 发布新新闻</button>
-    </div>
+      </div>
 
-    <div class="card shadow-sm">
+      <div class="card shadow-sm">
         <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>封面</th>
-                        <th>标题</th>
-                        <th>发布日期</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="news-tbody">
-                    </tbody>
-            </table>
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>封面</th>
+                <th>标题</th>
+                <th>发布日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="news-tbody"></tbody>
+          </table>
         </div>
+      </div>
     </div>
-</div>
 
-<div class="modal fade" id="newsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="newsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">新闻编辑</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="newsForm">
-                    <div class="mb-3">
-                        <label class="form-label">新闻标题</label>
-                        <input type="text" class="form-control" id="n-title" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">发布日期 (格式如 2026-03-24)</label>
-                        <input type="text" class="form-control" id="n-date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">副标题 / 简述</label>
-                        <textarea class="form-control" id="n-desc" rows="2"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">上传封面图</label>
-                        <input class="form-control" type="file" id="n-file" accept="image/*">
-                        <input type="hidden" id="n-image-url">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">新闻正文 (输入 HTML 源码)</label>
-                        <textarea class="form-control" id="n-content" rows="6" placeholder="<p>在这里输入正文内容...</p>"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="saveNews()">保存并发布</button>
-            </div>
+          <div class="modal-header">
+            <h5 class="modal-title">新闻编辑</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="newsForm">
+              <div class="mb-3">
+                <label class="form-label">新闻标题</label>
+                <input type="text" class="form-control" id="n-title" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">发布日期 (格式如 2026-03-24)</label>
+                <input type="text" class="form-control" id="n-date" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">副标题 / 简述</label>
+                <textarea class="form-control" id="n-desc" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">上传封面图</label>
+                <input class="form-control" type="file" id="n-file" accept="image/*" />
+                <input type="hidden" id="n-image-url" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">新闻正文 (支持直接从 Word 复制粘贴)</label>
+                <div style="border: 1px solid #ccc; border-radius: 4px; z-index: 100">
+                  <div id="editor-toolbar" style="border-bottom: 1px solid #ccc"></div>
+                  <div id="editor-container" style="height: 400px; overflow-y: hidden"></div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveNews()">保存并发布</button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/@wangeditor/editor@latest/dist/index.js"></script>
 
-<script>
-    // 1. 页面加载时的权限拦截
-    const token = localStorage.getItem('cms_token');
-    if (!token) {
+    <script>
+      // 1. 页面加载时的权限拦截
+      const token = localStorage.getItem('cms_token');
+      if (!token) {
         alert('未登录或登录已过期，请重新登录！');
         window.location.href = '/admin/login.html';
-    }
+      }
 
-    // 弹窗实例
-    const newsModal = new bootstrap.Modal(document.getElementById('newsModal'));
+      // 弹窗实例
+      const newsModal = new bootstrap.Modal(document.getElementById('newsModal'));
+      const { createEditor, createToolbar } = window.wangEditor;
+      let editor = null; // 提升作用域，方便后面获取内容
+      const editorConfig = {
+        placeholder: '在此输入正文，或直接从 Word 复制粘贴过来...',
+        MENU_CONF: {
+          uploadImage: {
+            customUpload(file, insertFn) {
+              new Compressor(file, {
+                quality: 0.8,
+                mimeType: 'image/webp',
+                success(result) {
+                  const formData = new FormData();
+                  const newName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
+                  formData.append('file', result, newName);
 
-    // 页面加载完成后，拉取新闻列表
-    document.addEventListener('DOMContentLoaded', loadNewsList);
+                  fetch('/api/admin/upload', {
+                    method: 'POST',
+                    headers: {
+                      Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+                    },
+                    body: formData,
+                  })
+                    .then((res) => res.json())
+                    .then((data) => {
+                      insertFn(data.url, '图片', data.url);
+                    })
+                    .catch((err) => {
+                      alert('上传图片失败：' + err.message);
+                    });
+                },
+                error(err) {
+                  console.error('图片压缩失败:', err.message);
+                },
+              });
+            },
+          },
+        },
+      };
 
-    // 2. 获取新闻列表 (公开接口，不需要 Token)
-    async function loadNewsList() {
+      // 创建编辑器
+      editor = createEditor({
+        selector: '#editor-container',
+        html: '<p><br></p>',
+        config: editorConfig,
+        mode: 'default', // 或 'simple'
+      });
+      // 监听封面图的选择事件
+      document.getElementById('n-file').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 提示并暂时禁用按钮，防止客户狂点
+        const fileInput = document.getElementById('n-file');
+        fileInput.disabled = true;
+
+        // 调用 Compressor.js 瞬间压缩转 WebP
+        new Compressor(file, {
+          quality: 0.8,
+          mimeType: 'image/webp',
+          success(result) {
+            const formData = new FormData();
+            const newName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
+            formData.append('file', result, newName);
+
+            // 带上 Token，偷偷发给咱们的 Go 后端
+            fetch('/api/admin/upload', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+              },
+              body: formData,
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                // 【核心】拿到 URL 后，静默存入隐藏的 input 里
+                document.getElementById('n-image-url').value = data.url;
+                // 你也可以在这里加个 toast 提示，为了极简我们就不弹窗了
+                console.log('封面图静默转码上传成功：', data.url);
+              })
+              .catch((err) => {
+                alert('封面图上传失败：' + err.message);
+              })
+              .finally(() => {
+                fileInput.disabled = false; // 恢复可用
+              });
+          },
+          error(err) {
+            console.error('封面图压缩失败:', err.message);
+            fileInput.disabled = false;
+          },
+        });
+      });
+
+      // 创建工具栏
+      const toolbar = createToolbar({
+        editor,
+        selector: '#editor-toolbar',
+        config: {},
+        mode: 'default',
+      });
+      // ---------------- 富文本编辑器初始化结束 ----------------
+
+      // 页面加载完成后，拉取新闻列表
+      document.addEventListener('DOMContentLoaded', loadNewsList);
+
+      // 2. 获取新闻列表 (公开接口，不需要 Token)
+      async function loadNewsList() {
         try {
-            const res = await fetch('/api/news');
-            const data = await res.json();
-            
-            const tbody = document.getElementById('news-tbody');
-            tbody.innerHTML = ''; // 清空表格
-            
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">暂无新闻数据</td></tr>';
-                return;
-            }
+          const res = await fetch('/api/news');
+          const data = await res.json();
 
-            data.forEach(news => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+          const tbody = document.getElementById('news-tbody');
+          tbody.innerHTML = ''; // 清空表格
+
+          if (data.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="5" class="text-center text-muted">暂无新闻数据</td></tr>';
+            return;
+          }
+
+          data.forEach((news) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
                     <td>${news.ID}</td>
                     <td><img src="${news.image}" alt="封面" style="height: 40px; border-radius: 4px; object-fit: cover;"></td>
                     <td class="fw-bold">${news.title}</td>
@@ -121,110 +230,85 @@
                         <button class="btn btn-danger btn-sm" onclick="deleteNews(${news.ID})">删除</button>
                     </td>
                 `;
-                tbody.appendChild(tr);
-            });
+            tbody.appendChild(tr);
+          });
         } catch (error) {
-            console.error('获取列表失败:', error);
+          console.error('获取列表失败:', error);
         }
-    }
+      }
 
-    // 打开添加弹窗并清空表单
-    function openAddModal() {
+      // 打开添加弹窗并清空表单
+      function openAddModal() {
         document.getElementById('newsForm').reset();
         document.getElementById('n-image-url').value = '';
         newsModal.show();
-    }
+      }
 
-    // 3. 核心：保存新闻 (包含先传图片，再存数据)
-    async function saveNews() {
-        const fileInput = document.getElementById('n-file');
-        let imageUrl = document.getElementById('n-image-url').value;
-
-        // 如果用户选择了新文件，先调用上传接口
-        if (fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                // 【划重点】请求受保护的上传接口，必须带上 Token
-                const uploadRes = await fetch('/api/admin/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: formData
-                });
-                
-                if (!uploadRes.ok) throw new Error('图片上传失败');
-                
-                const uploadData = await uploadRes.json();
-                imageUrl = uploadData.url; // 拿到后端返回的图片路径
-            } catch (error) {
-                alert(error.message);
-                return;
-            }
-        }
+      // 3. 核心：保存新闻 (包含先传图片，再存数据)
+      // 瘦身后的保存新闻逻辑
+      async function saveNews() {
+        // 直接从隐藏输入框里拿刚才静默上传好的图片 URL
+        const imageUrl = document.getElementById('n-image-url').value;
 
         // 组装新闻数据
         const newsData = {
-            title: document.getElementById('n-title').value,
-            date: document.getElementById('n-date').value,
-            description: document.getElementById('n-desc').value,
-            image: imageUrl,
-            content: document.getElementById('n-content').value
+          title: document.getElementById('n-title').value,
+          date: document.getElementById('n-date').value,
+          description: document.getElementById('n-desc').value,
+          image: imageUrl,
+          content: editor.getHtml(), // 获取富文本编辑器里的完美 HTML
         };
 
-        // 发送保存新闻请求 (受 JWT 保护)
+        // 发送保存请求 (受 JWT 保护)
         try {
-            const res = await fetch('/api/admin/news', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token // 【划重点】带上身份令牌
-                },
-                body: JSON.stringify(newsData)
-            });
+          const res = await fetch('/api/admin/news', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: JSON.stringify(newsData),
+          });
 
-            if (res.ok) {
-                alert('发布成功！');
-                newsModal.hide(); // 关闭弹窗
-                loadNewsList();   // 刷新列表
-            } else {
-                const errData = await res.json();
-                alert('发布失败: ' + errData.error);
-            }
+          if (res.ok) {
+            alert('发布成功！');
+            newsModal.hide(); // 关闭弹窗
+            loadNewsList(); // 刷新列表
+          } else {
+            const errData = await res.json();
+            alert('发布失败: ' + errData.error);
+          }
         } catch (error) {
-            console.error('保存报错:', error);
+          console.error('保存报错:', error);
         }
-    }
-
-    // 4. 删除新闻 (受 JWT 保护)
-    async function deleteNews(id) {
+      }
+      // 4. 删除新闻 (受 JWT 保护)
+      async function deleteNews(id) {
         if (!confirm('确定要删除这条新闻吗？')) return;
 
         try {
-            const res = await fetch(`/api/admin/news/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': 'Bearer ' + token // 【划重点】带上身份令牌
-                }
-            });
+          const res = await fetch(`/api/admin/news/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: 'Bearer ' + token, // 【划重点】带上身份令牌
+            },
+          });
 
-            if (res.ok) {
-                loadNewsList(); // 刷新列表
-            } else {
-                alert('删除失败，可能没有权限！');
-            }
+          if (res.ok) {
+            loadNewsList(); // 刷新列表
+          } else {
+            alert('删除失败，可能没有权限！');
+          }
         } catch (error) {
-            console.error('删除报错:', error);
+          console.error('删除报错:', error);
         }
-    }
+      }
 
-    // 退出登录
-    function logout() {
+      // 退出登录
+      function logout() {
         localStorage.removeItem('cms_token');
         window.location.href = '/admin/login.html';
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>

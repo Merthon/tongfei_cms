@@ -47,11 +47,12 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">新闻编辑</h5>
+            <h5 class="modal-title" id="modal-title-text">新闻编辑</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <form id="newsForm">
+              <input type="hidden" id="n-id" />
               <div class="mb-3">
                 <label class="form-label">新闻标题</label>
                 <input type="text" class="form-control" id="n-title" required />
@@ -227,6 +228,8 @@
                     <td class="fw-bold">${news.title}</td>
                     <td>${news.date}</td>
                     <td>
+                        <button class="btn btn-primary btn-sm me-2" onclick="editNews(${news.ID})">编辑</button>
+                        
                         <button class="btn btn-danger btn-sm" onclick="deleteNews(${news.ID})">删除</button>
                     </td>
                 `;
@@ -240,14 +243,44 @@
       // 打开添加弹窗并清空表单
       function openAddModal() {
         document.getElementById('newsForm').reset();
+        document.getElementById('n-id').value = ''; // 【关键】清空隐藏的 ID
         document.getElementById('n-image-url').value = '';
+        document.getElementById('modal-title-text').innerText = '发布新新闻';
+        if (editor) editor.setHtml('<p><br></p>'); // 清空富文本编辑器
         newsModal.show();
       }
+      // 编辑
+      async function editNews(id) {
+        try {
+          // 先去查这条新闻的老数据 (复用咱们之前写的前台详情接口)
+          const res = await fetch(`/api/news/${id}`);
+          if (!res.ok) throw new Error('获取新闻详情失败');
+          const news = await res.json();
 
+          // 1. 把 ID 存进隐藏的输入框里
+          document.getElementById('n-id').value = news.ID;
+
+          // 2. 把老数据填回表单
+          document.getElementById('n-title').value = news.title;
+          document.getElementById('n-date').value = news.date;
+          document.getElementById('n-desc').value = news.description;
+          document.getElementById('n-image-url').value = news.image;
+
+          // 3. 把 HTML 正文塞回富文本编辑器
+          if (editor) editor.setHtml(news.content);
+
+          // 4. 改个标题，弹出窗口
+          document.getElementById('modal-title-text').innerText = '编辑新闻';
+          newsModal.show();
+        } catch (error) {
+          alert(error.message);
+        }
+      }
       // 3. 核心：保存新闻 (包含先传图片，再存数据)
-      // 瘦身后的保存新闻逻辑
+      // 智能保存新闻 (根据是否有 ID 自动判断是新增还是修改)
       async function saveNews() {
-        // 直接从隐藏输入框里拿刚才静默上传好的图片 URL
+        // 获取隐藏的 ID 和图片 URL
+        const id = document.getElementById('n-id').value;
         const imageUrl = document.getElementById('n-image-url').value;
 
         // 组装新闻数据
@@ -256,13 +289,17 @@
           date: document.getElementById('n-date').value,
           description: document.getElementById('n-desc').value,
           image: imageUrl,
-          content: editor.getHtml(), // 获取富文本编辑器里的完美 HTML
+          content: editor.getHtml(),
         };
 
-        // 发送保存请求 (受 JWT 保护)
+        // 【核心魔法】：根据是否有 ID，动态决定请求方式和接口路径
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/news/${id}` : '/api/admin/news';
+
         try {
-          const res = await fetch('/api/admin/news', {
-            method: 'POST',
+          // 发送受 JWT 保护的请求
+          const res = await fetch(url, {
+            method: method,
             headers: {
               'Content-Type': 'application/json',
               Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
@@ -271,12 +308,14 @@
           });
 
           if (res.ok) {
-            alert('发布成功！');
+            // 根据操作类型弹出不同提示
+            alert(id ? '修改成功！' : '发布成功！');
+            newsModal.show(); // 确保遮罩层动画正常
             newsModal.hide(); // 关闭弹窗
-            loadNewsList(); // 刷新列表
+            loadNewsList(); // 刷新背后的列表
           } else {
             const errData = await res.json();
-            alert('发布失败: ' + errData.error);
+            alert('保存失败: ' + errData.error);
           }
         } catch (error) {
           console.error('保存报错:', error);

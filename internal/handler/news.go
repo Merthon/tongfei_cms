@@ -13,7 +13,7 @@ import (
 func GetNewsList(c echo.Context) error {
 	var newsList []model.News
 	
-	result := repository.DB.Select("id", "title", "date", "description", "image").Find(&newsList)
+	result := repository.DB.Select("id", "title", "date", "description", "image").Order("date DESC, id DESC").Find(&newsList)
 	if result.Error != nil {
 		// Echo 直接 return c.JSON，非常简洁
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取新闻列表失败"})
@@ -72,9 +72,6 @@ func UpdateNews(c echo.Context) error {
 // DeleteNews 删除新闻
 func DeleteNews(c echo.Context) error {
 	id := c.Param("id")
-
-	// GORM 的 Delete 方法非常直观，根据 ID 删除对应的数据
-	// 注意：由于我们在 model 中嵌入了 gorm.Model，这里默认是“软删除” (记录仍在，但 DeletedAt 字段会被赋值)
 	result := repository.DB.Delete(&model.News{}, id)
 	
 	if result.Error != nil {

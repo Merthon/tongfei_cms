@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fmt.Println("正在启动同飞 CMS 后端服务 (Echo 驱动)...")
+	fmt.Println("正在启动同飞后端服务")
 	
 	// 1. 初始化数据库
 	repository.InitDB()

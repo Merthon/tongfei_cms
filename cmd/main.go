@@ -38,6 +38,10 @@ func main() {
 	publicApi.GET("/news", handler.GetNewsList)       // 前台看新闻列表是公开的
 	publicApi.GET("/news/:id", handler.GetNewsDetail) // 前台看新闻详情是公开的
 
+	// 产品
+	publicApi.GET("/front/products.json", handler.GetProductsJson)
+	publicApi.GET("/front/products/:modelName/data.json", handler.GetProductDataJson)
+
 	// 2. 受保护的后台 API 路由组 (必须携带 Token 才能访问)
 	adminApi := e.Group("/api/admin")
 	// 给 adminApi 这个组加上 JWT 中间件保护伞
@@ -50,6 +54,13 @@ func main() {
 	adminApi.PUT("/news/:id", handler.UpdateNews)
 	adminApi.DELETE("/news/:id", handler.DeleteNews)
 	adminApi.POST("/upload", handler.UploadImage)
+
+	// 【新增】产品管理接口
+	adminApi.GET("/products", handler.GetAdminProductList)
+	adminApi.GET("/products/:id", handler.GetAdminProductDetail)
+	adminApi.POST("/products", handler.CreateProduct)
+	adminApi.PUT("/products/:id", handler.UpdateProduct)
+	adminApi.DELETE("/products/:id", handler.DeleteProduct)
 
 	// 6. 启动服务，监听 8080 端口
 	e.Logger.Fatal(e.Start(":8080"))

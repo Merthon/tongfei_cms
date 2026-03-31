@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>同飞后台 - 产品管理</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <style>
+      .dynamic-row {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        position: relative;
+      }
+      .remove-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      .img-preview {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <div class="d-flex" style="min-height: 100vh">
+      <div id="sidebar-container" class="bg-dark" style="width: 250px; flex-shrink: 0"></div>
+
+      <div class="flex-grow-1 d-flex flex-column">
+        <div id="header-container"></div>
+
+        <div class="container-fluid p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">产品图册管理</h4>
+            <div class="d-flex gap-3">
+              <select id="category-filter" class="form-select w-auto" onchange="filterByCategory()">
+                <option value="">全部分类 (All)</option>
+              </select>
+              <button class="btn btn-success" onclick="openAddModal()">+ 发布新产品</button>
+            </div>
+          </div>
+
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-3">ID</th>
+                    <th>主图</th>
+                    <th>所属行业</th>
+                    <th>产品型号</th>
+                    <th>产品名称</th>
+                    <th class="pe-3">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="product-tbody"></tbody>
+              </table>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-end py-3 border-top-0">
+              <ul class="pagination mb-0" id="admin-pagination"></ul>
+            </div>
+          </div>
+
+          <div class="modal fade" id="productModal" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header bg-light">
+                  <h5 class="modal-title fw-bold" id="modal-title-text">录入产品档案</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                  <form id="productForm">
+                    <input type="hidden" id="p-id" />
+
+                    <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button
+                          class="nav-link active"
+                          data-bs-toggle="pill"
+                          data-bs-target="#tab-base"
+                          type="button"
+                        >
+                          1. 基础信息与附件
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button
+                          class="nav-link"
+                          data-bs-toggle="pill"
+                          data-bs-target="#tab-industry"
+                          type="button"
+                        >
+                          2. 行业与应用
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button
+                          class="nav-link"
+                          data-bs-toggle="pill"
+                          data-bs-target="#tab-advantage"
+                          type="button"
+                        >
+                          3. 产品优势
+                        </button>
+                      </li>
+                    </ul>
+
+                    <div
+                      class="tab-content bg-white p-4 border rounded shadow-sm"
+                      id="pills-tabContent"
+                    >
+                      <div class="tab-pane fade show active" id="tab-base">
+                        <div class="row">
+                          <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted small fw-bold">
+                              所属行业 (Category)
+                            </label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="p-category"
+                              list="category-options"
+                              placeholder="选择或直接输入新行业"
+                              required
+                            />
+                            <datalist id="category-options"></datalist>
+                          </div>
+                          <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted small fw-bold">
+                              产品型号 (如 MWA)
+                            </label>
+                            <input type="text" class="form-control" id="p-model" required />
+                          </div>
+                          <div class="col-md-4 mb-3">
+                            <label class="form-label text-muted small fw-bold">
+                              目录名 (如 air_water_mwa)
+                            </label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="p-dir"
+                              placeholder="URL 路由使用的名字"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div class="mb-4">
+                          <label class="form-label text-muted small fw-bold">产品名称 (Name)</label>
+                          <input type="text" class="form-control" id="p-name" required />
+                        </div>
+
+                        <div class="row border-top pt-3">
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label text-info small fw-bold">
+                              产品主图 (MainImage)
+                            </label>
+                            <div class="d-flex align-items-center">
+                              <img id="preview-main" class="img-preview d-none" src="" />
+                              <input
+                                class="form-control w-75"
+                                type="file"
+                                accept="image/*"
+                                onchange="
+                                  uploadSingleFile(this, 'p-main-img-url', 'preview-main', true)
+                                "
+                              />
+                              <input type="hidden" id="p-main-img-url" />
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                            <label class="form-label text-warning small fw-bold">
+                              产品说明书 (ZIP/PDF)
+                            </label>
+                            <input
+                              class="form-control w-100"
+                              type="file"
+                              accept=".zip,.pdf"
+                              onchange="uploadSingleFile(this, 'p-file-url', null, false)"
+                            />
+                            <input type="hidden" id="p-file-url" />
+                            <div id="file-name-display" class="small text-muted mt-1"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tab-pane fade" id="tab-industry">
+                        <h6 class="fw-bold text-primary border-bottom pb-2">行业背景模块</h6>
+                        <div class="mb-3">
+                          <label class="form-label text-muted small">行业大图</label>
+                          <input
+                            class="form-control w-50"
+                            type="file"
+                            accept="image/*"
+                            onchange="uploadSingleFile(this, 'p-ind-img-url', null, true)"
+                          />
+                          <input type="hidden" id="p-ind-img-url" />
+                        </div>
+                        <div class="mb-4">
+                          <label class="form-label text-muted small">
+                            行业文案 (每行一句，自动拆分为数组)
+                          </label>
+                          <textarea
+                            class="form-control"
+                            id="p-ind-text"
+                            rows="3"
+                            placeholder="Intelligent Equipment Manufacturing Industry"
+                          ></textarea>
+                        </div>
+
+                        <h6 class="fw-bold text-success border-bottom pb-2 mt-4">应用场景模块</h6>
+                        <div class="mb-3">
+                          <label class="form-label text-muted small">应用大图</label>
+                          <input
+                            class="form-control w-50"
+                            type="file"
+                            accept="image/*"
+                            onchange="uploadSingleFile(this, 'p-app-img-url', null, true)"
+                          />
+                          <input type="hidden" id="p-app-img-url" />
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label text-muted small">应用文案 (每行一句)</label>
+                          <textarea
+                            class="form-control"
+                            id="p-app-text"
+                            rows="4"
+                            placeholder="CNC machine tool...&#10;Communication equipment..."
+                          ></textarea>
+                        </div>
+                      </div>
+
+                      <div class="tab-pane fade" id="tab-advantage">
+                        <div class="mb-3">
+                          <label class="form-label text-muted small fw-bold">优势侧边大图</label>
+                          <input
+                            class="form-control w-50"
+                            type="file"
+                            accept="image/*"
+                            onchange="uploadSingleFile(this, 'p-adv-img-url', null, true)"
+                          />
+                          <input type="hidden" id="p-adv-img-url" />
+                        </div>
+
+                        <hr />
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <label class="form-label text-muted small fw-bold mb-0">
+                            优势特征列表 (动态添加)
+                          </label>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addAdvantageRow()"
+                          >
+                            + 新增一项优势
+                          </button>
+                        </div>
+
+                        <div id="adv-container"></div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer bg-white border-top shadow-sm">
+                  <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary px-5 fw-bold"
+                    onclick="saveProduct()"
+                  >
+                    保存入库
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+    <script src="./common.js"></script>
+
+    <script>
+      // 1. 初始化菜单
+      initLayout('product');
+
+      // ================= 全局变量 =================
+      let productModal = null;
+      let allProducts = [];
+      let filteredProducts = [];
+      let adminCurrentPage = 1;
+      const adminItemsPerPage = 10;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('productModal');
+        if (modalEl) productModal = new bootstrap.Modal(modalEl);
+
+        loadProductList();
+      });
+
+      // ================= 智能路径解析器 =================
+      function getFileUrl(fileStr, dirName) {
+        if (!fileStr) return '';
+        if (fileStr.startsWith('/uploads')) return 'http://localhost:8080' + fileStr;
+        if (fileStr.startsWith('http')) return fileStr;
+        return `http://localhost:8080/products/${dirName}/${fileStr}`;
+      }
+
+      // ================= 列表获取与分类魔法 =================
+      async function loadProductList() {
+        try {
+          const res = await fetch('http://localhost:8080/api/admin/products', {
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+          });
+          const data = await res.json();
+          allProducts = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+          filteredProducts = [...allProducts];
+          extractAndRenderCategories();
+          filterByCategory();
+        } catch (error) {
+          console.error('获取列表失败:', error);
+          document.getElementById('product-tbody').innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger">数据加载失败，请检查后端状态</td></tr>';
+        }
+      }
+
+      function extractAndRenderCategories() {
+        const select = document.getElementById('category-filter');
+        const currentVal = select.value;
+        const uniqueCategories = [...new Set(allProducts.map((p) => p.category))];
+
+        let html = '<option value="">全部分类 (All)</option>';
+        uniqueCategories.forEach((c) => {
+          html += `<option value="${c}">${c}</option>`;
+        });
+        select.innerHTML = html;
+        if (uniqueCategories.includes(currentVal)) select.value = currentVal;
+
+        // 填充表单里的 datalist
+        const datalist = document.getElementById('category-options');
+        datalist.innerHTML = '';
+        uniqueCategories.forEach((c) => {
+          datalist.innerHTML += `<option value="${c}">`;
+        });
+      }
+
+      window.filterByCategory = function () {
+        const cat = document.getElementById('category-filter').value;
+        filteredProducts =
+          cat === '' ? [...allProducts] : allProducts.filter((p) => p.category === cat);
+        renderProductPage(1);
+      };
+
+      function renderProductPage(page) {
+        adminCurrentPage = page;
+        const tbody = document.getElementById('product-tbody');
+        tbody.innerHTML = '';
+
+        const start = (page - 1) * adminItemsPerPage;
+        const pageData = filteredProducts.slice(start, start + adminItemsPerPage);
+
+        if (pageData.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="text-center py-4 text-muted">暂无产品数据</td></tr>';
+          renderProductPagination();
+          return;
+        }
+
+        pageData.forEach((p) => {
+          const imgUrl = getFileUrl(p.main_image, p.model_name);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+                <td class="ps-3 text-muted">#${p.id}</td>
+                <td><img src="${imgUrl}" style="height: 40px; width: 60px; border-radius: 4px; object-fit: cover; border: 1px solid #eee;"></td>
+                <td><span class="badge bg-secondary">${p.category}</span></td>
+                <td class="text-muted">${p.model_name}</td>
+                <td class="fw-bold text-dark">${p.name}</td>
+                <td class="pe-3">
+                    <button class="btn btn-outline-primary btn-sm me-2 px-3" onclick="editProduct(${p.id})">编辑</button>
+                    <button class="btn btn-outline-danger btn-sm px-3" onclick="deleteProduct(${p.id})">删除</button>
+                </td>
+            `;
+          tbody.appendChild(tr);
+        });
+        renderProductPagination();
+      }
+
+      function renderProductPagination() {
+        const totalPages = Math.ceil(filteredProducts.length / adminItemsPerPage);
+        const pageContainer = document.getElementById('admin-pagination');
+        let html = '';
+        if (totalPages <= 1) {
+          pageContainer.innerHTML = '';
+          return;
+        }
+
+        html += `<li class="page-item ${adminCurrentPage === 1 ? 'disabled' : ''}"><a class="page-link shadow-none" href="#" onclick="changeProductPage(${adminCurrentPage - 1}, event)">上一页</a></li>`;
+        for (let i = 1; i <= totalPages; i++) {
+          html += `<li class="page-item ${adminCurrentPage === i ? 'active' : ''}"><a class="page-link shadow-none" href="#" onclick="changeProductPage(${i}, event)">${i}</a></li>`;
+        }
+        html += `<li class="page-item ${adminCurrentPage === totalPages ? 'disabled' : ''}"><a class="page-link shadow-none" href="#" onclick="changeProductPage(${adminCurrentPage + 1}, event)">下一页</a></li>`;
+        pageContainer.innerHTML = html;
+      }
+
+      window.changeProductPage = function (page, event) {
+        if (event) event.preventDefault();
+        const totalPages = Math.ceil(filteredProducts.length / adminItemsPerPage);
+        if (page >= 1 && page <= totalPages) renderProductPage(page);
+      };
+
+      // ================= 弹窗交互：新增与重置 =================
+      function openAddModal() {
+        document.getElementById('productForm').reset();
+        document.getElementById('p-id').value = '';
+
+        // 清理所有隐藏域和预览
+        document.querySelectorAll('input[type="hidden"]').forEach((el) => (el.value = ''));
+        const mainPreview = document.getElementById('preview-main');
+        if (mainPreview) {
+          mainPreview.src = '';
+          mainPreview.classList.add('d-none');
+        }
+        document.getElementById('file-name-display').innerText = '';
+
+        // 清空优势
+        document.getElementById('adv-container').innerHTML = '';
+        addAdvantageRow(); // 默认给一个空行
+
+        document.getElementById('modal-title-text').innerText = '录入新产品';
+
+        // 切回第一个 Tab
+        const firstTab = new bootstrap.Tab(
+          document.querySelector('#pills-tab button[data-bs-target="#tab-base"]')
+        );
+        firstTab.show();
+
+        if (productModal) productModal.show();
+      }
+
+      // ================= 弹窗交互：编辑数据回显 =================
+      async function editProduct(id) {
+        try {
+          const res = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+          });
+          if (!res.ok) throw new Error('获取详情失败');
+          const p = await res.json();
+
+          const detail = p.detail_data ? JSON.parse(p.detail_data) : {};
+
+          // 1. 回显基础信息
+          document.getElementById('p-id').value = p.id;
+          document.getElementById('p-category').value = p.category;
+          document.getElementById('p-dir').value = p.model_name;
+          document.getElementById('p-name').value = p.name;
+          document.getElementById('p-model').value = detail['产品-型号'] || '';
+
+          document.getElementById('p-main-img-url').value = p.main_image || '';
+          const mainPreview = document.getElementById('preview-main');
+          if (p.main_image && mainPreview) {
+            mainPreview.src = getFileUrl(p.main_image, p.model_name);
+            mainPreview.classList.remove('d-none');
+          }
+
+          document.getElementById('p-file-url').value = p.file_url || '';
+          document.getElementById('file-name-display').innerText = p.file_url
+            ? '已有文件: ' + p.file_url
+            : '';
+
+          // 2. 回显行业与应用
+          document.getElementById('p-ind-img-url').value = detail['行业-图片'] || '';
+          document.getElementById('p-ind-text').value = (detail['行业-文案'] || []).join('\n');
+          document.getElementById('p-app-img-url').value = detail['应用-图片'] || '';
+          document.getElementById('p-app-text').value = (detail['应用-文案'] || []).join('\n');
+
+          // 3. 回显产品优势
+          document.getElementById('p-adv-img-url').value = detail['优势-图片'] || '';
+          const advContainer = document.getElementById('adv-container');
+          advContainer.innerHTML = '';
+          const icons = detail['优势-图标'] || [];
+          const titles = detail['优势-标题'] || [];
+          const contents = detail['优势-内容'] || [];
+
+          if (icons.length > 0) {
+            for (let i = 0; i < icons.length; i++) {
+              addAdvantageRow(icons[i], titles[i], contents[i]);
+            }
+          } else {
+            addAdvantageRow();
+          }
+
+          document.getElementById('modal-title-text').innerText = '编辑产品档案';
+
+          const firstTab = new bootstrap.Tab(
+            document.querySelector('#pills-tab button[data-bs-target="#tab-base"]')
+          );
+          firstTab.show();
+
+          if (productModal) productModal.show();
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      // ================= 核心：保存入库 (POST/PUT) =================
+      async function saveProduct() {
+        const pId = document.getElementById('p-id').value;
+
+        const baseData = {
+          category: document.getElementById('p-category').value,
+          name: document.getElementById('p-name').value,
+          model_name: document.getElementById('p-dir').value,
+          main_image: document.getElementById('p-main-img-url').value,
+          file_url: document.getElementById('p-file-url').value,
+        };
+
+        const indText = document
+          .getElementById('p-ind-text')
+          .value.split('\n')
+          .map((t) => t.trim())
+          .filter((t) => t !== '');
+        const appText = document
+          .getElementById('p-app-text')
+          .value.split('\n')
+          .map((t) => t.trim())
+          .filter((t) => t !== '');
+
+        const icons = [],
+          titles = [],
+          contents = [];
+        document.querySelectorAll('.dynamic-row').forEach((row) => {
+          icons.push(row.querySelector('.adv-icon').value);
+          titles.push(row.querySelector('.adv-title').value);
+          contents.push(row.querySelector('.adv-desc').value);
+        });
+
+        const detailDataObj = {
+          '产品-主图': baseData.main_image,
+          '产品-型号': document.getElementById('p-model').value,
+          '产品-名称': baseData.name,
+          '产品-文件': baseData.file_url,
+          '行业-图片': document.getElementById('p-ind-img-url').value,
+          '行业-文案': indText,
+          '应用-图片': document.getElementById('p-app-img-url').value,
+          '应用-文案': appText,
+          '优势-图片': document.getElementById('p-adv-img-url').value,
+          '优势-图标': icons,
+          '优势-标题': titles,
+          '优势-内容': contents,
+        };
+
+        baseData.detail_data = JSON.stringify(detailDataObj);
+
+        const method = pId ? 'PUT' : 'POST';
+        const url = pId
+          ? `http://localhost:8080/api/admin/products/${pId}`
+          : 'http://localhost:8080/api/admin/products';
+
+        try {
+          const res = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: JSON.stringify(baseData),
+          });
+
+          if (res.ok) {
+            if (productModal) productModal.hide();
+            loadProductList();
+          } else {
+            const errData = await res.json();
+            alert('保存失败: ' + (errData.error || '未知错误'));
+          }
+        } catch (error) {
+          console.error('保存报错:', error);
+          alert('网络请求失败');
+        }
+      }
+
+      // ================= 删除产品 =================
+      async function deleteProduct(id) {
+        if (!confirm('🚨 确定要彻底删除该产品档案吗？')) return;
+        try {
+          const res = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+          });
+          if (res.ok) loadProductList();
+          else alert('删除失败，可能没有权限！');
+        } catch (error) {
+          console.error('删除报错:', error);
+        }
+      }
+
+      // ================= 动态增加优势行 =================
+      function addAdvantageRow(icon = 'bi-shield-check', title = '', desc = '') {
+        const container = document.getElementById('adv-container');
+        const rowId = 'adv-row-' + Date.now() + Math.floor(Math.random() * 100);
+
+        const html = `
+            <div class="dynamic-row" id="${rowId}">
+                <button type="button" class="btn btn-danger btn-sm remove-btn" onclick="document.getElementById('${rowId}').remove()">删除</button>
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="small text-muted">图标 (Bootstrap)</label>
+                        <input type="text" class="form-control adv-icon" value="${icon}">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="small text-muted">优势标题</label>
+                        <input type="text" class="form-control adv-title" value="${title}">
+                    </div>
+                    <div class="col-md-12 mt-2">
+                        <label class="small text-muted">详细内容</label>
+                        <textarea class="form-control adv-desc" rows="2">${desc}</textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+      }
+
+      // ================= 单文件/图片上传流水线 =================
+      function uploadSingleFile(inputEl, hiddenId, previewId, isImage) {
+        const file = inputEl.files[0];
+        if (!file) return;
+        inputEl.disabled = true;
+
+        const doUpload = (fileToUpload, originalName) => {
+          const formData = new FormData();
+          formData.append('file', fileToUpload, originalName);
+
+          fetch('http://localhost:8080/api/admin/upload', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+            body: formData,
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              document.getElementById(hiddenId).value = data.url;
+              if (previewId) {
+                const imgEl = document.getElementById(previewId);
+                imgEl.src = 'http://localhost:8080' + data.url;
+                imgEl.classList.remove('d-none');
+              }
+              if (hiddenId === 'p-file-url') {
+                document.getElementById('file-name-display').innerText =
+                  '已上传新文件: ' + originalName;
+              }
+            })
+            .catch((err) => alert('上传失败！'))
+            .finally(() => (inputEl.disabled = false));
+        };
+
+        if (isImage) {
+          new Compressor(file, {
+            quality: 0.8,
+            mimeType: 'image/webp',
+            success(result) {
+              doUpload(result, file.name.replace(/\.[^/.]+$/, '') + '.webp');
+            },
+          });
+        } else {
+          doUpload(file, file.name);
+        }
+      }
+    </script>
+  </body>
+</html>

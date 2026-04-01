@@ -31,6 +31,7 @@ func main() {
 	}))
 	e.Static("/uploads", "uploads")
 	e.Static("/admin", "admin-ui")
+	e.Static("/products", "products")
 
 	// 5. 配置 API 路由组
 	publicApi := e.Group("/api")

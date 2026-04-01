@@ -201,13 +201,18 @@
                         <h6 class="fw-bold text-primary border-bottom pb-2">行业背景模块</h6>
                         <div class="mb-3">
                           <label class="form-label text-muted small">行业大图</label>
-                          <input
-                            class="form-control w-50"
-                            type="file"
-                            accept="image/*"
-                            onchange="uploadSingleFile(this, 'p-ind-img-url', null, true)"
-                          />
-                          <input type="hidden" id="p-ind-img-url" />
+                          <div class="d-flex align-items-center">
+                            <img id="preview-ind" class="img-preview d-none" src="" />
+                            <input
+                              class="form-control w-50"
+                              type="file"
+                              accept="image/*"
+                              onchange="
+                                uploadSingleFile(this, 'p-ind-img-url', 'preview-ind', true)
+                              "
+                            />
+                            <input type="hidden" id="p-ind-img-url" />
+                          </div>
                         </div>
                         <div class="mb-4">
                           <label class="form-label text-muted small">
@@ -224,13 +229,18 @@
                         <h6 class="fw-bold text-success border-bottom pb-2 mt-4">应用场景模块</h6>
                         <div class="mb-3">
                           <label class="form-label text-muted small">应用大图</label>
-                          <input
-                            class="form-control w-50"
-                            type="file"
-                            accept="image/*"
-                            onchange="uploadSingleFile(this, 'p-app-img-url', null, true)"
-                          />
-                          <input type="hidden" id="p-app-img-url" />
+                          <div class="d-flex align-items-center">
+                            <img id="preview-app" class="img-preview d-none" src="" />
+                            <input
+                              class="form-control w-50"
+                              type="file"
+                              accept="image/*"
+                              onchange="
+                                uploadSingleFile(this, 'p-app-img-url', 'preview-app', true)
+                              "
+                            />
+                            <input type="hidden" id="p-app-img-url" />
+                          </div>
                         </div>
                         <div class="mb-3">
                           <label class="form-label text-muted small">应用文案 (每行一句)</label>
@@ -245,14 +255,19 @@
 
                       <div class="tab-pane fade" id="tab-advantage">
                         <div class="mb-3">
-                          <label class="form-label text-muted small fw-bold">优势侧边大图</label>
-                          <input
-                            class="form-control w-50"
-                            type="file"
-                            accept="image/*"
-                            onchange="uploadSingleFile(this, 'p-adv-img-url', null, true)"
-                          />
-                          <input type="hidden" id="p-adv-img-url" />
+                          <label class="form-label text-muted small fw-bold">优势大图</label>
+                          <div class="d-flex align-items-center">
+                            <img id="preview-adv" class="img-preview d-none" src="" />
+                            <input
+                              class="form-control w-50"
+                              type="file"
+                              accept="image/*"
+                              onchange="
+                                uploadSingleFile(this, 'p-adv-img-url', 'preview-adv', true)
+                              "
+                            />
+                            <input type="hidden" id="p-adv-img-url" />
+                          </div>
                         </div>
 
                         <hr />
@@ -487,25 +502,28 @@
 
           // 2. 回显行业与应用
           document.getElementById('p-ind-img-url').value = detail['行业-图片'] || '';
-          document.getElementById('p-ind-text').value = (detail['行业-文案'] || []).join('\n');
-          document.getElementById('p-app-img-url').value = detail['应用-图片'] || '';
-          document.getElementById('p-app-text').value = (detail['应用-文案'] || []).join('\n');
+            const indPreview = document.getElementById('preview-ind');
+            if (detail['行业-图片'] && indPreview) {
+                indPreview.src = getFileUrl(detail['行业-图片'], p.model_name);
+                indPreview.classList.remove('d-none');
+            }
+            document.getElementById('p-ind-text').value = (detail['行业-文案'] || []).join('\n');
+
+            document.getElementById('p-app-img-url').value = detail['应用-图片'] || '';
+            const appPreview = document.getElementById('preview-app');
+            if (detail['应用-图片'] && appPreview) {
+                appPreview.src = getFileUrl(detail['应用-图片'], p.model_name);
+                appPreview.classList.remove('d-none');
+            }
+            document.getElementById('p-app-text').value = (detail['应用-文案'] || []).join('\n');
 
           // 3. 回显产品优势
           document.getElementById('p-adv-img-url').value = detail['优势-图片'] || '';
-          const advContainer = document.getElementById('adv-container');
-          advContainer.innerHTML = '';
-          const icons = detail['优势-图标'] || [];
-          const titles = detail['优势-标题'] || [];
-          const contents = detail['优势-内容'] || [];
-
-          if (icons.length > 0) {
-            for (let i = 0; i < icons.length; i++) {
-              addAdvantageRow(icons[i], titles[i], contents[i]);
+            const advPreview = document.getElementById('preview-adv');
+            if (detail['优势-图片'] && advPreview) {
+                advPreview.src = getFileUrl(detail['优势-图片'], p.model_name);
+                advPreview.classList.remove('d-none');
             }
-          } else {
-            addAdvantageRow();
-          }
 
           document.getElementById('modal-title-text').innerText = '编辑产品档案';
 

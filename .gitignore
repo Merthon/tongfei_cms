@@ -6,3 +6,5 @@
 *.jpg
 *.webp
 *.DS_Store
+*.json
+*.zip

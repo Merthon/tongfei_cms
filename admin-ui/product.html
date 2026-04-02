@@ -12,6 +12,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
     />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
       .dynamic-row {
         background: #f8f9fa;
@@ -59,6 +60,7 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
+                    <th style="width: 40px"></th>
                     <th class="ps-3">ID</th>
                     <th>主图</th>
                     <th>所属行业</th>
@@ -345,7 +347,7 @@
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
           });
           const data = await res.json();
-          allProducts = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          allProducts = data;
 
           filteredProducts = [...allProducts];
           extractAndRenderCategories();
@@ -402,7 +404,15 @@
         pageData.forEach((p) => {
           const imgUrl = getFileUrl(p.main_image, p.model_name);
           const tr = document.createElement('tr');
+
+          // 🚨 【核心 1】：必须把产品 ID 绑在 tr 上，不然拖完不知道是谁！
+          tr.setAttribute('data-id', p.id);
+
+          // 🚨 【核心 2】：加了一列带有 .drag-handle 的小手柄
           tr.innerHTML = `
+                <td class="drag-handle text-center" style="cursor: grab;" title="按住拖动排序">
+                    <i class="bi bi-grip-vertical text-muted fs-5"></i>
+                </td>
                 <td class="ps-3 text-muted">#${p.id}</td>
                 <td><img src="${imgUrl}" style="height: 40px; width: 60px; border-radius: 4px; object-fit: cover; border: 1px solid #eee;"></td>
                 <td><span class="badge bg-secondary">${p.category}</span></td>
@@ -415,7 +425,88 @@
             `;
           tbody.appendChild(tr);
         });
+
         renderProductPagination();
+
+        // 🚨 【核心 3：施法时机】：每次表格重新画完（翻页、筛选分类后），必须立刻重新激活拖拽！
+        initTableSort();
+      }
+      // 在最上方定义全局变量的地方，加一句：
+    let sortableInstance = null;
+
+    // ================= 拖拽排序核心引擎 =================
+    function initTableSort() {
+        const el = document.getElementById('product-tbody');
+        if (!el) return;
+
+        // 如果之前已经绑定过，先销毁它，防止“多重影分身”打架
+        if (sortableInstance) {
+            sortableInstance.destroy();
+        }
+
+        sortableInstance = Sortable.create(el, {
+            handle: '.drag-handle', // 🚨 魔法：只有鼠标捏住那个小图标，才能拖动！体验极佳！
+            animation: 150,         // 动画过度时间
+            ghostClass: 'bg-light', // 被拖动的那个空位的背景色
+            onEnd: async function() {
+                // 拖拽松手瞬间，收集所有 ID
+                const ids = [];
+                document.querySelectorAll('#product-tbody tr').forEach(tr => {
+                    const id = tr.getAttribute('data-id');
+                    if (id) ids.push(parseInt(id));
+                });
+
+                // 如果是在“全部分类”下拖动，警告一下（因为全部分类拖动意义不大，最好是在单个分类下排）
+                const currentCat = document.getElementById('category-filter').value;
+                if (currentCat === "") {
+                    // 可选：提醒用户最好在具体行业里排序
+                    console.log("提示：最好选择一个具体的行业后再进行排序，这样前台展示更精准。");
+                }
+
+                // 把新的顺序发给 Go 后端
+                await saveNewSortOrder(ids);
+            }
+        });
+    }
+
+    // ================= 发送给 Go 的接口 =================
+    async function saveNewSortOrder(ids) {
+        try {
+            const res = await fetch('http://localhost:8080/api/admin/products/sort', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('cms_token')
+                },
+                body: JSON.stringify({ ids: ids })
+            });
+            if (res.ok) {
+                // 可选：在这里加个漂亮的小 Toast 提示“排序已保存”
+                console.log('排序同步成功');
+            } else {
+                alert('排序保存失败');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+      // 发送排序请求
+      async function saveNewSortOrder(ids) {
+        try {
+          const res = await fetch('http://localhost:8080/api/admin/products/sort', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: JSON.stringify({ ids: ids }),
+          });
+          if (res.ok) {
+            console.log('排序已同步到数据库');
+          }
+        } catch (error) {
+          alert('排序保存失败，请刷新重试');
+        }
       }
 
       function renderProductPagination() {
@@ -502,28 +593,28 @@
 
           // 2. 回显行业与应用
           document.getElementById('p-ind-img-url').value = detail['行业-图片'] || '';
-            const indPreview = document.getElementById('preview-ind');
-            if (detail['行业-图片'] && indPreview) {
-                indPreview.src = getFileUrl(detail['行业-图片'], p.model_name);
-                indPreview.classList.remove('d-none');
-            }
-            document.getElementById('p-ind-text').value = (detail['行业-文案'] || []).join('\n');
+          const indPreview = document.getElementById('preview-ind');
+          if (detail['行业-图片'] && indPreview) {
+            indPreview.src = getFileUrl(detail['行业-图片'], p.model_name);
+            indPreview.classList.remove('d-none');
+          }
+          document.getElementById('p-ind-text').value = (detail['行业-文案'] || []).join('\n');
 
-            document.getElementById('p-app-img-url').value = detail['应用-图片'] || '';
-            const appPreview = document.getElementById('preview-app');
-            if (detail['应用-图片'] && appPreview) {
-                appPreview.src = getFileUrl(detail['应用-图片'], p.model_name);
-                appPreview.classList.remove('d-none');
-            }
-            document.getElementById('p-app-text').value = (detail['应用-文案'] || []).join('\n');
+          document.getElementById('p-app-img-url').value = detail['应用-图片'] || '';
+          const appPreview = document.getElementById('preview-app');
+          if (detail['应用-图片'] && appPreview) {
+            appPreview.src = getFileUrl(detail['应用-图片'], p.model_name);
+            appPreview.classList.remove('d-none');
+          }
+          document.getElementById('p-app-text').value = (detail['应用-文案'] || []).join('\n');
 
           // 3. 回显产品优势
           document.getElementById('p-adv-img-url').value = detail['优势-图片'] || '';
-            const advPreview = document.getElementById('preview-adv');
-            if (detail['优势-图片'] && advPreview) {
-                advPreview.src = getFileUrl(detail['优势-图片'], p.model_name);
-                advPreview.classList.remove('d-none');
-            }
+          const advPreview = document.getElementById('preview-adv');
+          if (detail['优势-图片'] && advPreview) {
+            advPreview.src = getFileUrl(detail['优势-图片'], p.model_name);
+            advPreview.classList.remove('d-none');
+          }
 
           document.getElementById('modal-title-text').innerText = '编辑产品档案';
 

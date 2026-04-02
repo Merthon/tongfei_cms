@@ -55,7 +55,8 @@ func main() {
 	adminApi.PUT("/news/:id", handler.UpdateNews)
 	adminApi.DELETE("/news/:id", handler.DeleteNews)
 	adminApi.POST("/upload", handler.UploadImage)
-
+    //排序接口
+	adminApi.PUT("/products/sort", handler.UpdateProductsSort)
 	// 【新增】产品管理接口
 	adminApi.GET("/products", handler.GetAdminProductList)
 	adminApi.GET("/products/:id", handler.GetAdminProductDetail)

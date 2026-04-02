@@ -11,31 +11,32 @@ import (
 )
 
 // GetProductsJson 伪装成总目录 products.json
+// GetProductsJson 伪装成总目录 products.json
 func GetProductsJson(c echo.Context) error {
-	var products []model.Product
-	
-	// 去数据库里查出所有的产品（为了速度，只查所属行业和型号名字）
-	if err := repository.DB.Select("category", "model_name").Find(&products).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取产品目录失败"})
-	}
+    var products []model.Product
+    
+    // 🚨 【核心修复】：加上 Order 指令！让权重高的排前面，权重一样的按创建时间排！
+    // 注意：既然要用 created_at 排序，最好把它也 select 出来防错。
+    err := repository.DB.Select("category", "model_name", "sort_order", "created_at").
+        Order("sort_order DESC, created_at DESC").
+        Find(&products).Error
+        
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取产品目录失败"})
+    }
 
-	// 拼装成前端需要的那个嵌套 JSON 格式
-	// 目标格式: {"行业名": {"产品": ["型号1", "型号2"]}}
-	result := make(map[string]map[string][]string)
+    result := make(map[string]map[string][]string)
 
-	for _, p := range products {
-		// 如果这个行业还没在 map 里，就初始化它
-		if _, exists := result[p.Category]; !exists {
-			result[p.Category] = map[string][]string{
-				"产品": {},
-			}
-		}
-		// 把产品型号塞进对应的行业数组里
-		result[p.Category]["产品"] = append(result[p.Category]["产品"], p.ModelName)
-	}
+    for _, p := range products {
+        if _, exists := result[p.Category]; !exists {
+            result[p.Category] = map[string][]string{
+                "产品": {},
+            }
+        }
+        result[p.Category]["产品"] = append(result[p.Category]["产品"], p.ModelName)
+    }
 
-	// 返回给前端！
-	return c.JSON(http.StatusOK, result)
+    return c.JSON(http.StatusOK, result)
 }
 
 // GetProductDataJson 伪装成单品文件夹里的 data.json
@@ -57,10 +58,10 @@ func GetProductDataJson(c echo.Context) error {
 
 	var relatedProducts []model.Product
 	// 去数据库查：行业相同，但排除掉当前自己这个产品，最多取 8 个
-	repository.DB.Select("model_name", "main_image").
-		Where("category = ? AND id != ?", product.Category, product.ID).
-		Limit(8).Find(&relatedProducts)
-
+	repository.DB.Select("model_name", "main_image", "sort_order", "created_at").
+        Where("category = ? AND id != ?", product.Category, product.ID).
+        Order("sort_order DESC, created_at DESC"). // 排队魔法！
+        Limit(8).Find(&relatedProducts)
 	// 准备两个空数组
 	var recommendLinks []string
 	var recommendImages []string

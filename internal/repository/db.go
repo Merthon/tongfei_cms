@@ -19,7 +19,7 @@ func InitDB() {
 	}
 
 	// 迁移
-	err = DB.AutoMigrate(&model.News{}, &model.Product{})
+	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}

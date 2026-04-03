@@ -21,8 +21,8 @@ func main() {
 	e := echo.New()
 	
 	// 3. 挂载官方极其好用的基础中间件
-	e.Use(middleware.Logger())  // 自动打印每一次请求的超美观日志
-	e.Use(middleware.Recover()) // 防止因为某个接口报错导致整个程序崩溃
+	e.Use(middleware.Logger())  
+	e.Use(middleware.Recover()) 
 	
 	// 4. 配置跨域 CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -42,27 +42,34 @@ func main() {
 	// 产品
 	publicApi.GET("/front/products.json", handler.GetProductsJson)
 	publicApi.GET("/front/products/:modelName/data.json", handler.GetProductDataJson)
+	publicApi.GET("/front/categories", handler.GetCategories)
 
-	// 2. 受保护的后台 API 路由组 (必须携带 Token 才能访问)
+	// 2. 受保护的后台
 	adminApi := e.Group("/api/admin")
-	// 给 adminApi 这个组加上 JWT 中间件保护伞
+	// 给 adminApi 这个组加上 JWT 
 	adminApi.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: handler.JwtSecret,
 	}))
 
-	// 把增、删、改、上传这几个危险操作，全都放进受保护的组里
+	// 把增、删、改放进受保护的组里
 	adminApi.POST("/news", handler.CreateNews)
 	adminApi.PUT("/news/:id", handler.UpdateNews)
 	adminApi.DELETE("/news/:id", handler.DeleteNews)
 	adminApi.POST("/upload", handler.UploadImage)
     //排序接口
 	adminApi.PUT("/products/sort", handler.UpdateProductsSort)
-	// 【新增】产品管理接口
+	// 产品管理
 	adminApi.GET("/products", handler.GetAdminProductList)
 	adminApi.GET("/products/:id", handler.GetAdminProductDetail)
 	adminApi.POST("/products", handler.CreateProduct)
 	adminApi.PUT("/products/:id", handler.UpdateProduct)
 	adminApi.DELETE("/products/:id", handler.DeleteProduct)
+	// 行业管理
+	adminApi.GET("/categories", handler.GetCategories)
+	adminApi.POST("/categories", handler.CreateCategory)
+	adminApi.PUT("/categories/:id", handler.UpdateCategory)
+	adminApi.DELETE("/categories/:id", handler.DeleteCategory)
+	adminApi.PUT("/categories/sort", handler.UpdateCategoriesSort)
 
 	// 6. 启动服务，监听 8080 端口
 	e.Logger.Fatal(e.Start(":8080"))

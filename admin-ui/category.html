@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>行业分类管理 - TONFY CMS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .drag-handle {
+        cursor: grab;
+      }
+      .drag-handle:active {
+        cursor: grabbing;
+      }
+      .table-hover tbody tr:hover {
+        background-color: #f1f4f8;
+      }
+    </style>
+  </head>
+  <body class="d-flex">
+    <div id="sidebar-container" class="bg-dark" style="width: 250px; min-height: 100vh"></div>
+
+    <div class="flex-grow-1 d-flex flex-column" style="height: 100vh; overflow-y: auto">
+      <div id="header-container"></div>
+
+      <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold m-0">行业分类列表</h4>
+          <button class="btn btn-primary" onclick="openModal()">
+            <i class="bi bi-plus-lg"></i>
+            新增行业
+          </button>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 50px">排序</th>
+                  <th>ID</th>
+                  <th>Banner图</th>
+                  <th>行业名称 (Name)</th>
+                  <th>主页短文案 (Short Desc)</th>
+                  <th>列表页长文案 (Banner Subtitle)</th>
+                  <th class="text-end pe-4">操作</th>
+                </tr>
+              </thead>
+              <tbody id="category-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="modalTitle">新增行业</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="categoryForm">
+              <input type="hidden" id="cat-id" />
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">行业名称 (英)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cat-name"
+                  placeholder="例如: Aerospace"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">主页短文案 (Short Description)</label>
+                <textarea
+                  class="form-control"
+                  id="cat-short"
+                  rows="2"
+                  placeholder="用于主页侧边栏的一句话描述..."
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">列表页长文案 (Banner Subtitle)</label>
+                <textarea
+                  class="form-control"
+                  id="cat-long"
+                  rows="3"
+                  placeholder="用于 products.html 顶部大图的带煽动性的副标题..."
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Banner 头图</label>
+                <div class="input-group">
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="cat-image-file"
+                    accept="image/*"
+                    onchange="uploadCategoryBanner()"
+                  />
+                  <input
+                    type="text"
+                    class="form-control bg-light"
+                    id="cat-image"
+                    placeholder="上传后自动生成路径..."
+                    readonly
+                  />
+                </div>
+                <div class="mt-2" id="cat-image-preview" style="display: none">
+                  <img
+                    src=""
+                    style="
+                      height: 120px;
+                      border-radius: 4px;
+                      border: 1px solid #ccc;
+                      object-fit: cover;
+                    "
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveCategory()">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="./common.js"></script>
+
+    <script>
+      // 🚨 触发你的菜单魔法，告诉它现在高亮“行业分类(category)”
+      if (typeof initLayout === 'function') {
+        initLayout('category');
+      }
+
+      const API_BASE = 'http://localhost:8080/api/admin/categories';
+      const myModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+      let sortableInstance = null;
+      let categoriesData = [];
+
+      async function loadCategories() {
+        try {
+          const res = await fetch(API_BASE, {
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+          });
+          categoriesData = await res.json();
+          const tbody = document.getElementById('category-tbody');
+          tbody.innerHTML = '';
+
+          categoriesData.forEach((c) => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-id', c.id);
+            let imgHtml = c.banner_image
+              ? `<img src="${c.banner_image.startsWith('http') ? c.banner_image : 'http://localhost:8080' + c.banner_image}" style="height:40px; border-radius:4px; object-fit:cover;">`
+              : '<span class="badge bg-secondary">无图</span>';
+
+            tr.innerHTML = `
+                        <td class="drag-handle text-center text-muted fs-5" title="按住拖动排序"><i class="bi bi-grip-vertical"></i></td>
+                        <td class="text-muted">#${c.id}</td>
+                        <td>${imgHtml}</td>
+                        <td class="fw-bold text-primary">${c.name}</td>
+                        <td class="text-truncate" style="max-width: 200px;" title="${c.short_description}">${c.short_description || '-'}</td>
+                        <td class="text-truncate" style="max-width: 250px;" title="${c.banner_subtitle}">${c.banner_subtitle || '-'}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="editCategory(${c.id})">编辑</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteCategory(${c.id})">删除</button>
+                        </td>
+                    `;
+            tbody.appendChild(tr);
+          });
+
+          initTableSort();
+        } catch (error) {
+          console.error('加载失败:', error);
+        }
+      }
+
+      function initTableSort() {
+        const el = document.getElementById('category-tbody');
+        if (sortableInstance) sortableInstance.destroy();
+        sortableInstance = Sortable.create(el, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'bg-light',
+          onEnd: async function () {
+            const ids = [];
+            document.querySelectorAll('#category-tbody tr').forEach((tr) => {
+              const id = tr.getAttribute('data-id');
+              if (id) ids.push(parseInt(id));
+            });
+            try {
+              await fetch(API_BASE + '/sort', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+                },
+                body: JSON.stringify({ ids: ids }),
+              });
+            } catch (e) {
+              alert('排序保存失败！');
+            }
+          },
+        });
+      }
+
+      function openModal(id = null) {
+        document.getElementById('categoryForm').reset();
+        document.getElementById('cat-id').value = '';
+        document.getElementById('modalTitle').textContent = '新增行业';
+        if (id) {
+          document.getElementById('modalTitle').textContent = '编辑行业';
+          const cat = categoriesData.find((c) => c.id === id);
+          if (cat) {
+            document.getElementById('cat-id').value = cat.id;
+            document.getElementById('cat-name').value = cat.name;
+            document.getElementById('cat-short').value = cat.short_description;
+            document.getElementById('cat-long').value = cat.banner_subtitle;
+            document.getElementById('cat-image').value = cat.banner_image;
+            const previewDiv = document.getElementById('cat-image-preview');
+            if (cat.banner_image) {
+              previewDiv.style.display = 'block';
+              previewDiv.querySelector('img').src = cat.banner_image.startsWith('http')
+                ? cat.banner_image
+                : 'http://localhost:8080' + cat.banner_image;
+            } else {
+              previewDiv.style.display = 'none';
+            }
+          }
+        }
+        myModal.show();
+      }
+
+      window.editCategory = openModal;
+
+      async function saveCategory() {
+        const id = document.getElementById('cat-id').value;
+        const payload = {
+          name: document.getElementById('cat-name').value,
+          short_description: document.getElementById('cat-short').value,
+          banner_subtitle: document.getElementById('cat-long').value,
+          banner_image: document.getElementById('cat-image').value,
+        };
+        if (!payload.name) return alert('行业名称不能为空！');
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_BASE}/${id}` : API_BASE;
+
+        try {
+          const res = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            myModal.hide();
+            loadCategories();
+          } else {
+            alert('保存失败！');
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function deleteCategory(id) {
+        if (!confirm('确定要删除这个行业吗？')) return;
+        try {
+          const res = await fetch(`${API_BASE}/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
+          });
+          if (res.ok) loadCategories();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', loadCategories);
+
+      // ================= 新增：图片上传与预览逻辑 =================
+      async function uploadCategoryBanner() {
+        const fileInput = document.getElementById('cat-image-file');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // 打包文件准备发送
+        const formData = new FormData();
+        formData.append('file', file); // 🚨 注意：这里的 'file' 要和你 Go 后端接收文件的字段名一致
+
+        try {
+          //这里的 URL 换成你原本用来上传产品图片的那个接口地址！
+          const uploadUrl = 'http://localhost:8080/api/admin/upload';
+
+          const res = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: formData,
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            // 根据你后端的实际返回格式调整这里的字段名（比如 data.filepath 或 data.data 等）
+            const imgUrl = data.url;
+
+            // 1. 把路径自动填进只读输入框
+            document.getElementById('cat-image').value = imgUrl;
+
+            // 2. 显示图片预览
+            const previewDiv = document.getElementById('cat-image-preview');
+            previewDiv.style.display = 'block';
+            // 加上 8080 前缀以便在后台能看到图
+            previewDiv.querySelector('img').src = 'http://localhost:8080' + imgUrl;
+          } else {
+            alert('图片上传失败，请检查后端接口！');
+          }
+        } catch (error) {
+          console.error(error);
+          alert('网络错误，图片上传中断');
+        }
+      }
+    </script>
+  </body>
+</html>

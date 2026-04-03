@@ -24,3 +24,15 @@ type Product struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// Category 行业分类数据模型
+type Category struct {
+	ID               uint      `gorm:"primaryKey" json:"id"`
+	Name             string    `json:"name"`              // 行业名称 (如: Aerospace)
+	ShortDescription string    `json:"short_description"` // 主页短文案
+	BannerSubtitle   string    `json:"banner_subtitle"`   // 列表页长文案
+	BannerImage      string    `json:"banner_image"`      // 行业专属 Banner 图路径
+	SortOrder        int       `json:"sort_order" gorm:"default:0"` // 拖拽排序权重
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}

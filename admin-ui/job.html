@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招聘管理 - TONFY CMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .table-hover tbody tr:hover { background-color: #f1f4f8; }
+        .nav-tabs .nav-link { color: #495057; font-weight: 500; }
+        .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; }
+        .resume-text { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body class="d-flex">
+
+    <div id="sidebar-container" class="bg-dark" style="width: 250px; min-height: 100vh;"></div>
+    <div class="flex-grow-1 d-flex flex-column" style="height: 100vh; overflow-y: auto;">
+        <div id="header-container"></div>
+
+        <div class="container-fluid p-4">
+            <h4 class="fw-bold mb-4">招聘与简历管理</h4>
+
+            <ul class="nav nav-tabs mb-4" id="jobTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#jobs-panel" type="button" role="tab">💼 职位发布管理</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resumes-tab" data-bs-toggle="tab" data-bs-target="#resumes-panel" type="button" role="tab">📥 收到简历库</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="jobTabsContent">
+                
+                <div class="tab-pane fade show active" id="jobs-panel" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" onclick="openJobModal()"><i class="bi bi-plus-lg"></i> 发布新职位</button>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">排序</th>
+                                        <th>职位名称</th>
+                                        <th>所属部门</th>
+                                        <th>工作地点</th>
+                                        <th>状态</th>
+                                        <th class="text-end pe-4">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobs-tbody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="resumes-panel" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>投递时间</th>
+                                        <th>应聘岗位</th>
+                                        <th>候选人姓名</th>
+                                        <th>联系邮箱 / 电话</th>
+                                        <th>自荐信</th>
+                                        <th>状态处理</th>
+                                        <th class="text-end pe-4">简历文件</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resumes-tbody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="jobModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="jobModalTitle">发布新职位</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="jobForm">
+                        <input type="hidden" id="job-id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">职位名称</label>
+                                <input type="text" class="form-control" id="job-title" placeholder="如: Sales Manager" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">是否开放招聘</label>
+                                <select class="form-select" id="job-active">
+                                    <option value="true">✅ 招聘中 (显示)</option>
+                                    <option value="false">❌ 已招满 (隐藏)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">所属部门</label>
+                                <input type="text" class="form-control" id="job-dept" placeholder="如: Global Operations" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">工作地点</label>
+                                <input type="text" class="form-control" id="job-loc" placeholder="如: China HQ" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary">岗位职责 (Responsibilities) - 🚨 核心提醒：</label>
+                            <p class="text-muted small mb-1">请直接粘贴文本，<strong>按回车键换行</strong>。前台网页会自动将每一行识别为一个带有圆点的列表项 (li)。</p>
+                            <textarea class="form-control" id="job-resp" rows="6" placeholder="第一条职责...&#10;第二条职责...&#10;第三条职责..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveJob()">保存职位</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./common.js"></script> <script>
+        // 触发菜单高亮 (确保你的 common.js 里有 job 这个判断)
+        if (typeof initLayout === 'function') initLayout('job');
+
+        const API_BASE_JOB = 'http://localhost:8080/api/admin/jobs';
+        const API_BASE_APP = 'http://localhost:8080/api/admin/applications';
+        const myJobModal = new bootstrap.Modal(document.getElementById('jobModal'));
+        
+        let jobsData = [];
+        let sortableInstance = null;
+
+        const getAuthHeaders = () => ({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('cms_token')
+        });
+
+        // ================== 职位管理逻辑 ==================
+        async function loadJobs() {
+            try {
+                const res = await fetch(API_BASE_JOB, { headers: getAuthHeaders() });
+                jobsData = await res.json();
+                const tbody = document.getElementById('jobs-tbody');
+                tbody.innerHTML = '';
+
+                jobsData.forEach(j => {
+                    const statusBadge = j.is_active ? '<span class="badge bg-success">招聘中</span>' : '<span class="badge bg-secondary">已隐藏</span>';
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', j.id);
+                    tr.innerHTML = `
+                        <td class="drag-handle text-center text-muted fs-5"><i class="bi bi-grip-vertical"></i></td>
+                        <td class="fw-bold">${j.title}</td>
+                        <td>${j.department}</td>
+                        <td>${j.location}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="editJob(${j.id})">编辑</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteJob(${j.id})">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                initJobSort();
+            } catch (error) { console.error("加载职位失败:", error); }
+        }
+
+        function initJobSort() {
+            const el = document.getElementById('jobs-tbody');
+            if (sortableInstance) sortableInstance.destroy();
+            sortableInstance = Sortable.create(el, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function() {
+                    const ids = Array.from(document.querySelectorAll('#jobs-tbody tr')).map(tr => parseInt(tr.getAttribute('data-id')));
+                    await fetch(API_BASE_JOB + '/sort', {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ ids: ids })
+                    });
+                }
+            });
+        }
+
+        function openJobModal(id = null) {
+            document.getElementById('jobForm').reset();
+            document.getElementById('job-id').value = '';
+            document.getElementById('jobModalTitle').textContent = '发布新职位';
+            if (id) {
+                document.getElementById('jobModalTitle').textContent = '编辑职位';
+                const job = jobsData.find(j => j.id === id);
+                if (job) {
+                    document.getElementById('job-id').value = job.id;
+                    document.getElementById('job-title').value = job.title;
+                    document.getElementById('job-dept').value = job.department;
+                    document.getElementById('job-loc').value = job.location;
+                    document.getElementById('job-resp').value = job.responsibilities;
+                    document.getElementById('job-active').value = job.is_active ? "true" : "false";
+                }
+            }
+            myJobModal.show();
+        }
+        window.editJob = openJobModal;
+
+        async function saveJob() {
+            const id = document.getElementById('job-id').value;
+            const payload = {
+                title: document.getElementById('job-title').value,
+                department: document.getElementById('job-dept').value,
+                location: document.getElementById('job-loc').value,
+                responsibilities: document.getElementById('job-resp').value,
+                is_active: document.getElementById('job-active').value === "true"
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE_JOB}/${id}` : API_BASE_JOB;
+
+            try {
+                const res = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
+                if (res.ok) {
+                    myJobModal.hide();
+                    loadJobs();
+                } else alert("保存失败");
+            } catch (error) { console.error(error); }
+        }
+
+        async function deleteJob(id) {
+            if (!confirm("确定要删除此职位吗？")) return;
+            try {
+                await fetch(`${API_BASE_JOB}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                loadJobs();
+            } catch (error) { console.error(error); }
+        }
+
+        // ================== 简历管理逻辑 ==================
+        async function loadApplications() {
+            try {
+                const res = await fetch(API_BASE_APP, { headers: getAuthHeaders() });
+                const apps = await res.json();
+                const tbody = document.getElementById('resumes-tbody');
+                tbody.innerHTML = '';
+
+                apps.forEach(app => {
+                    const date = new Date(app.created_at).toLocaleString('zh-CN', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                    
+                    // 状态下拉框控制
+                    const statusColors = { 'Unread': 'danger', 'Contacted': 'warning', 'Processed': 'success' };
+                    const statusText = { 'Unread': '未读 (新)', 'Contacted': '已联系', 'Processed': '已归档' };
+                    const currentColor = statusColors[app.status] || 'secondary';
+
+                    const statusDropdown = `
+                        <select class="form-select form-select-sm text-${currentColor} fw-bold" style="width: 120px;" onchange="changeAppStatus(${app.id}, this.value)">
+                            <option value="Unread" ${app.status === 'Unread' ? 'selected' : ''}>🔴 未读</option>
+                            <option value="Contacted" ${app.status === 'Contacted' ? 'selected' : ''}>🟠 已联系</option>
+                            <option value="Processed" ${app.status === 'Processed' ? 'selected' : ''}>🟢 已归档</option>
+                        </select>
+                    `;
+
+                    // 简历下载链接拼接
+                    const resumeLink = app.resume_file_url.startsWith('http') ? app.resume_file_url : 'http://localhost:8080' + app.resume_file_url;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="text-muted small">${date}</td>
+                        <td class="fw-bold text-primary">${app.position}</td>
+                        <td>${app.applicant_name}</td>
+                        <td class="small">${app.email}<br><span class="text-muted">${app.phone}</span></td>
+                        <td class="resume-text" title="${app.cover_letter}">${app.cover_letter || '-'}</td>
+                        <td>${statusDropdown}</td>
+                        <td class="text-end pe-4">
+                            <a href="${resumeLink}" target="_blank" class="btn btn-outline-dark btn-sm me-2"><i class="bi bi-file-earmark-arrow-down"></i> 查看</a>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteApp(${app.id})"><i class="bi bi-trash"></i> 删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) { console.error("加载简历失败:", error); }
+        }
+
+        async function changeAppStatus(id, newStatus) {
+            try {
+                const res = await fetch(`${API_BASE_APP}/${id}/status`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if(res.ok) loadApplications(); // 刷新颜色
+            } catch (error) { console.error("状态更新失败", error); }
+        }
+
+        // 页面加载时，分别初始化两个面板的数据
+        document.addEventListener('DOMContentLoaded', () => {
+            loadJobs();
+            loadApplications();
+        });
+
+        // 删除简历
+        async function deleteApp(id) {
+            if (!confirm("⚠️ 警告：确定要彻底删除这份简历吗？\n硬盘里的 PDF 文件也会被同步销毁且不可恢复！")) return;
+            
+            try {
+                const res = await fetch(`${API_BASE_APP}/${id}`, { 
+                    method: 'DELETE', 
+                    headers: getAuthHeaders() 
+                });
+                if (res.ok) {
+                    loadApplications(); // 刷新表格
+                } else {
+                    alert("删除失败！");
+                }
+            } catch (error) { 
+                console.error(error); 
+            }
+        }
+    </script>
+</body>
+</html>

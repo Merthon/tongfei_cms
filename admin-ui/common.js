@@ -32,7 +32,7 @@ function initLayout(activeMenu) {
             <a href="/admin/category.html" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'category' ? 'active bg-primary' : ''}">
                 📂 行业分类管理
             </a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'job' ? 'active bg-primary' : ''}">
+            <a href="/admin/job.html" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'job' ? 'active bg-primary' : ''}">
                 💼 职位管理
             </a>
         </div>

@@ -2,16 +2,21 @@ package main
 
 import (
 	"fmt"
+	"log" 
 	
 	"tonfy_CMS/internal/handler"
 	"tonfy_CMS/internal/repository"
-
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/echo-jwt/v4"
 )
 
 func main() {
+	err := godotenv.Load()
+    if err != nil {
+        log.Println("未找到 .env 文件")
+    }
 	fmt.Println("正在启动同飞后端服务")
 	
 	// 1. 初始化数据库
@@ -33,20 +38,23 @@ func main() {
 	e.Static("/admin", "admin-ui")
 	e.Static("/products", "products")
 
-	// 5. 配置 API 路由组
+	// 配置 API 路由组
 	publicApi := e.Group("/api")
-	publicApi.POST("/login", handler.Login)           // 登录接口必须公开
-	publicApi.GET("/news", handler.GetNewsList)       // 前台看新闻列表是公开的
-	publicApi.GET("/news/:id", handler.GetNewsDetail) // 前台看新闻详情是公开的
-
+	publicApi.POST("/login", handler.Login)           // 登录接口
+	publicApi.GET("/news", handler.GetNewsList)       // 新闻列表接口
+	publicApi.GET("/news/:id", handler.GetNewsDetail) // 新闻详情接口
 	// 产品
 	publicApi.GET("/front/products.json", handler.GetProductsJson)
 	publicApi.GET("/front/products/:modelName/data.json", handler.GetProductDataJson)
 	publicApi.GET("/front/categories", handler.GetCategories)
 
-	// 2. 受保护的后台
+	//职位
+	publicApi.POST("/apply", handler.SubmitApplication)
+	publicApi.GET("/front/jobs", handler.GetFrontJobs)
+
+	// 受保护的后台
 	adminApi := e.Group("/api/admin")
-	// 给 adminApi 这个组加上 JWT 
+	// adminApi 这个组加上 JWT 
 	adminApi.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: handler.JwtSecret,
 	}))
@@ -70,6 +78,15 @@ func main() {
 	adminApi.PUT("/categories/:id", handler.UpdateCategory)
 	adminApi.DELETE("/categories/:id", handler.DeleteCategory)
 	adminApi.PUT("/categories/sort", handler.UpdateCategoriesSort)
+	// 职位管理
+	adminApi.GET("/jobs", handler.GetAdminJobs)
+    adminApi.POST("/jobs", handler.CreateJob)
+    adminApi.PUT("/jobs/:id", handler.UpdateJob)
+    adminApi.DELETE("/jobs/:id", handler.DeleteJob)
+    adminApi.PUT("/jobs/sort", handler.UpdateJobsSort)
+	adminApi.GET("/applications", handler.GetApplications)
+    adminApi.PUT("/applications/:id/status", handler.UpdateApplicationStatus)
+	adminApi.DELETE("/applications/:id", handler.DeleteApplication)
 
 	// 6. 启动服务，监听 8080 端口
 	e.Logger.Fatal(e.Start(":8080"))

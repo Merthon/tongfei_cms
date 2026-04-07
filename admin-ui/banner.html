@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页大屏管理 - TONFY CMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .table-hover tbody tr:hover { background-color: #f1f4f8; }
+    </style>
+</head>
+<body class="d-flex">
+
+    <div id="sidebar-container" class="bg-dark" style="width: 250px; min-height: 100vh;"></div>
+    <div class="flex-grow-1 d-flex flex-column" style="height: 100vh; overflow-y: auto;">
+        <div id="header-container"></div>
+
+        <div class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0">📺 首页大屏 (Banner) 管理</h4>
+                <button class="btn btn-primary" onclick="openModal()"><i class="bi bi-plus-lg"></i> 新增素材</button>
+            </div>
+
+            <div class="alert alert-info border-0 shadow-sm">
+                <strong><i class="bi bi-lightbulb"></i> 智能排版提示：</strong> 系统会根据<strong>排在第一位</strong>的素材类型决定前台模式。如果是视频，则前台全屏循环播放视频；如果是图片，则自动开启多图轮播模式。
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">排序</th>
+                                <th>预览</th>
+                                <th>类型</th>
+                                <th>大标题 / 副标题</th>
+                                <th>状态</th>
+                                <th class="text-end pe-4">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="banner-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bannerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTitle">新增大屏素材</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bannerForm">
+                        <input type="hidden" id="ban-id">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">素材类型</label>
+                                <select class="form-select" id="ban-type">
+                                    <option value="image">🖼️ 图片 (Image)</option>
+                                    <option value="video">🎥 视频 (Video)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">前台显示状态</label>
+                                <select class="form-select" id="ban-active">
+                                    <option value="true">✅ 显示</option>
+                                    <option value="false">❌ 隐藏</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">上传媒体文件 (.webp, .jpg, .mp4, .webm)</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="ban-file" onchange="uploadMedia()">
+                                <input type="text" class="form-control bg-light" id="ban-url" placeholder="上传后自动生成路径..." readonly required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">主标题 (Main Title)</label>
+                            <textarea class="form-control" id="ban-main" rows="2" placeholder="如: TEMPERATURE (回车) CONTROL"></textarea>
+                            <div class="form-text">提示: 在此处按回车键，前台文字会自动换行。</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">副标题 (Sub Title)</label>
+                            <input type="text" class="form-control" id="ban-sub" placeholder="如: Reliable Thermal Management...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">跳转落地页 (图片模式有效)</label>
+                            <input type="text" class="form-control" id="ban-link" placeholder="如: ./products.html?i=Laser 或 https://...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBanner()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./common.js"></script>
+
+    <script>
+        // 记得在 common.js 里给首页大屏加个入口并传 'banner' 参数
+        if (typeof initLayout === 'function') initLayout('banner');
+
+        const API_BASE = 'http://localhost:8080/api/admin/banners';
+        const UPLOAD_API = 'http://localhost:8080/api/admin/upload';
+        const myModal = new bootstrap.Modal(document.getElementById('bannerModal'));
+        let bannersData = [];
+        let sortableInstance = null;
+
+        const getAuthHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('cms_token') });
+
+        async function loadBanners() {
+            try {
+                const res = await fetch(API_BASE, { headers: getAuthHeaders() });
+                bannersData = await res.json();
+                const tbody = document.getElementById('banner-tbody');
+                tbody.innerHTML = '';
+
+                bannersData.forEach((b, index) => {
+                    const statusBadge = b.is_active ? '<span class="badge bg-success">显示</span>' : '<span class="badge bg-secondary">隐藏</span>';
+                    const typeIcon = b.media_type === 'video' ? '🎥 视频' : '🖼️ 图片';
+                    
+                    let previewHtml = '';
+                    const fullUrl = b.media_url.startsWith('http') ? b.media_url : 'http://localhost:8080' + b.media_url;
+                    if (b.media_type === 'video') {
+                        previewHtml = `<video src="${fullUrl}" style="height:50px; border-radius:4px; object-fit:cover;" muted></video>`;
+                    } else {
+                        previewHtml = `<img src="${fullUrl}" style="height:50px; border-radius:4px; object-fit:cover;">`;
+                    }
+
+                    const isTop1 = index === 0 ? '<span class="badge bg-danger ms-2">主控模式</span>' : '';
+
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', b.id);
+                    tr.innerHTML = `
+                        <td class="drag-handle text-center text-muted fs-5"><i class="bi bi-grip-vertical"></i></td>
+                        <td>${previewHtml}</td>
+                        <td class="fw-bold">${typeIcon} ${isTop1}</td>
+                        <td class="small"><strong>${b.main_title.replace(/\n/g, ' ')}</strong><br><span class="text-muted">${b.sub_title}</span></td>
+                        <td>${statusBadge}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="editBanner(${b.id})">编辑</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteBanner(${b.id})">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                initSort();
+            } catch (error) { console.error("加载失败:", error); }
+        }
+
+        function initSort() {
+            const el = document.getElementById('banner-tbody');
+            if (sortableInstance) sortableInstance.destroy();
+            sortableInstance = Sortable.create(el, {
+                handle: '.drag-handle', animation: 150,
+                onEnd: async function() {
+                    const ids = Array.from(document.querySelectorAll('#banner-tbody tr')).map(tr => parseInt(tr.getAttribute('data-id')));
+                    await fetch(API_BASE + '/sort', { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ ids: ids }) });
+                    loadBanners(); // 刷新以更新“主控模式”标签
+                }
+            });
+        }
+
+        async function uploadMedia() {
+            const fileInput = document.getElementById('ban-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch(UPLOAD_API, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('cms_token') },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('ban-url').value = data.url; 
+                } else alert('上传失败');
+            } catch (error) { console.error(error); alert('网络错误'); }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('bannerForm').reset();
+            document.getElementById('ban-id').value = '';
+            document.getElementById('modalTitle').textContent = '新增大屏素材';
+            if (id) {
+                document.getElementById('modalTitle').textContent = '编辑素材';
+                const ban = bannersData.find(b => b.id === id);
+                if (ban) {
+                    document.getElementById('ban-id').value = ban.id;
+                    document.getElementById('ban-type').value = ban.media_type;
+                    document.getElementById('ban-active').value = ban.is_active ? "true" : "false";
+                    document.getElementById('ban-url').value = ban.media_url;
+                    document.getElementById('ban-main').value = ban.main_title;
+                    document.getElementById('ban-sub').value = ban.sub_title;
+                    document.getElementById('ban-link').value = ban.link_url;
+                }
+            }
+            myModal.show();
+        }
+        window.editBanner = openModal;
+
+        async function saveBanner() {
+            const id = document.getElementById('ban-id').value;
+            const payload = {
+                media_type: document.getElementById('ban-type').value,
+                media_url: document.getElementById('ban-url').value,
+                main_title: document.getElementById('ban-main').value,
+                sub_title: document.getElementById('ban-sub').value,
+                link_url: document.getElementById('ban-link').value,
+                is_active: document.getElementById('ban-active').value === "true"
+            };
+
+            if (!payload.media_url) return alert("必须上传媒体文件！");
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE}/${id}` : API_BASE;
+
+            try {
+                const res = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
+                if (res.ok) { myModal.hide(); loadBanners(); } 
+                else alert("保存失败");
+            } catch (error) { console.error(error); }
+        }
+
+        async function deleteBanner(id) {
+            if (!confirm("确定要删除此素材吗？")) return;
+            try {
+                await fetch(`${API_BASE}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                loadBanners();
+            } catch (error) { console.error(error); }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadBanners);
+    </script>
+</body>
+</html>

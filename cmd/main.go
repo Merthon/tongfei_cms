@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/echo-jwt/v4"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func main() {
@@ -26,9 +27,7 @@ func main() {
 	e := echo.New()
 	
 	// 3. 挂载官方极其好用的基础中间件
-	e.Use(middleware.Logger())  
 	e.Use(middleware.Recover()) 
-	
 	// 4. 配置跨域 CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"}, // 允许所有前端跨域请求
@@ -51,6 +50,12 @@ func main() {
 	//职位
 	publicApi.POST("/apply", handler.SubmitApplication)
 	publicApi.GET("/front/jobs", handler.GetFrontJobs)
+	//联系我们
+	publicApi.POST("/contact", handler.SubmitContact)
+	//发送产品邮件
+	publicApi.POST("/product/send-manual", handler.SendProductManual)
+	//首页banner
+	publicApi.GET("/front/banners", handler.GetFrontBanners)
 
 	// 受保护的后台
 	adminApi := e.Group("/api/admin")
@@ -87,6 +92,29 @@ func main() {
 	adminApi.GET("/applications", handler.GetApplications)
     adminApi.PUT("/applications/:id/status", handler.UpdateApplicationStatus)
 	adminApi.DELETE("/applications/:id", handler.DeleteApplication)
+
+	// 首页banner管理
+	adminApi.GET("/banners", handler.GetAdminBanners)
+    adminApi.POST("/banners", handler.CreateBanner)
+    adminApi.PUT("/banners/:id", handler.UpdateBanner)
+    adminApi.DELETE("/banners/:id", handler.DeleteBanner)
+    adminApi.PUT("/banners/sort", handler.UpdateBannersSort)
+	
+	//运行日志
+	// 配置日志轮转规则
+    logWriter := &lumberjack.Logger{
+        Filename:   "logs/system.log", // 存放在项目根目录的 logs 文件夹下
+        MaxSize:    10,                // 每个日志文件最大 10 MB
+        MaxBackups: 30,                // 最多保留 30 个旧文件
+        MaxAge:     30,                // 最多保留 30 天 (超过天数自动物理删除)
+        Compress:   true,              // 自动把旧日志压缩成 .gz 文件，极其省硬盘
+    }
+
+    // 将切割引擎接入 Echo 框架
+    e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+        Output: logWriter,
+        Format: "[${time_rfc3339}] status=${status} latency=${latency_human} ip=${remote_ip} method=${method} uri=${uri} error=${error}\n",
+    }))
 
 	// 6. 启动服务，监听 8080 端口
 	e.Logger.Fatal(e.Start(":8080"))

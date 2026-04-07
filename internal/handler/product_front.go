@@ -11,7 +11,6 @@ import (
 )
 
 // GetProductsJson 伪装成总目录 products.json
-// GetProductsJson 伪装成总目录 products.json
 func GetProductsJson(c echo.Context) error {
     var products []model.Product
     

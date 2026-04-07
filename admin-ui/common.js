@@ -35,6 +35,9 @@ function initLayout(activeMenu) {
             <a href="/admin/job.html" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'job' ? 'active bg-primary' : ''}">
                 💼 职位管理
             </a>
+            <a href="/admin/banner.html" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'banner' ? 'active bg-primary' : ''}">
+                📺 首页banner管理
+            </a>
         </div>
     `;
   const sidebarContainer = document.getElementById('sidebar-container');

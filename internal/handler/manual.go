@@ -44,7 +44,7 @@ func SendProductManual(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "服务器上未找到该说明书文件"})
 	}
 
-	// 异步开火，发射邮件！
+	// 发送邮件
 	go sendAttachmentEmailAsync(recipient, absPath)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "邮件发送任务已成功提交"})
@@ -147,5 +147,5 @@ func sendAttachmentEmailAsync(targetEmail, manualPath string) {
 		return 
 	}
 	
-	fmt.Printf("【异步任务-成功】已将产品资料发至客户: %s\n", targetEmail)
+	fmt.Printf("已将产品资料发至客户: %s\n", targetEmail)
 }

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"net/http"
-	"tonfy_CMS/internal/model"      // 确保这里的包名对应你的实际项目路径
-	"tonfy_CMS/internal/repository" // 确保这里的包名对应你的实际项目路径
+	"tonfy_CMS/internal/model"    
+	"tonfy_CMS/internal/repository" 
 
 	"github.com/labstack/echo/v4"
 )
@@ -11,7 +11,7 @@ import (
 // GetCategories 获取所有分类 (前台和后台通用，因为都要按排序展示)
 func GetCategories(c echo.Context) error {
 	var categories []model.Category
-	//取出来的时候，强行按照 sort_order（权重）降序排好队！
+	//取出来的时候，强行按照 sort_order降序排好队！
 	if err := repository.DB.Order("sort_order DESC, created_at ASC").Find(&categories).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取分类失败"})
 	}
@@ -53,7 +53,7 @@ func DeleteCategory(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "删除成功"})
 }
 
-// UpdateCategoriesSort 批量更新行业排序 (跟咱们之前写的产品拖拽排序逻辑一模一样！)
+// UpdateCategoriesSort 批量更新行业排序
 func UpdateCategoriesSort(c echo.Context) error {
 	var payload struct {
 		IDs []uint `json:"ids"`

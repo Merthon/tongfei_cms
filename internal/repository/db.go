@@ -2,7 +2,7 @@ package repository
 
 import (
 	"log"
-	"tonfy_CMS/internal/model" // 注意替换成你自己的 go mod 模块名
+	"tonfy_CMS/internal/model" 
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

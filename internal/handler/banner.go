@@ -11,9 +11,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ================= 1. 前台接口 (公开) =================
+// =================  前台接口 (公开) =================
 
-// GetFrontBanners 获取前台展示的 Banner (只查激活的，按权重排序)
+// GetFrontBanners 获取前台展示的 Banner 
 func GetFrontBanners(c echo.Context) error {
 	var banners []model.Banner
 	if err := repository.DB.Where("is_active = ?", true).Order("sort_order DESC, created_at ASC").Find(&banners).Error; err != nil {
@@ -22,7 +22,7 @@ func GetFrontBanners(c echo.Context) error {
 	return c.JSON(http.StatusOK, banners)
 }
 
-// ================= 2. 后台接口 (受保护) =================
+// ================= 后台接口 (受保护) =================
 
 // GetAdminBanners 获取后台管理列表
 func GetAdminBanners(c echo.Context) error {

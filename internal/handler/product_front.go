@@ -14,8 +14,7 @@ import (
 func GetProductsJson(c echo.Context) error {
     var products []model.Product
     
-    // 🚨 【核心修复】：加上 Order 指令！让权重高的排前面，权重一样的按创建时间排！
-    // 注意：既然要用 created_at 排序，最好把它也 select 出来防错。
+    // 加上 Order 指令！让权重高的排前面，权重一样的按创建时间排
     err := repository.DB.Select("category", "model_name", "sort_order", "created_at").
         Order("sort_order DESC, created_at DESC").
         Find(&products).Error
@@ -43,7 +42,7 @@ func GetProductDataJson(c echo.Context) error {
 	modelName := c.Param("modelName")
 
 	var product model.Product
-	// 1. 找当前产品
+	// 找当前产品
 	if err := repository.DB.Where("model_name = ?", modelName).First(&product).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "找不到该产品的数据"})
 	}

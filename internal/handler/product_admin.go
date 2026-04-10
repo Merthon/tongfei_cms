@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// 1. 获取后台产品列表 (按时间倒序)
+//  获取后台产品列表
 func GetAdminProductList(c echo.Context) error {
 	var products []model.Product
 	if err := repository.DB.Order("sort_order DESC, created_at DESC").Find(&products).Error; err != nil {
@@ -18,7 +18,7 @@ func GetAdminProductList(c echo.Context) error {
 	return c.JSON(http.StatusOK, products)
 }
 
-// 2. 获取单个产品详情 (用于回显到编辑弹窗)
+//  获取单个产品详情
 func GetAdminProductDetail(c echo.Context) error {
 	id := c.Param("id")
 	var product model.Product
@@ -28,7 +28,7 @@ func GetAdminProductDetail(c echo.Context) error {
 	return c.JSON(http.StatusOK, product)
 }
 
-// 3. 新增产品
+//  新增产品
 func CreateProduct(c echo.Context) error {
 	var product model.Product
 	if err := c.Bind(&product); err != nil {
@@ -41,7 +41,7 @@ func CreateProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, product)
 }
 
-// 4. 更新产品
+// 更新产品
 func UpdateProduct(c echo.Context) error {
 	id := c.Param("id")
 	var product model.Product
@@ -63,7 +63,7 @@ func UpdateProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, product)
 }
 
-// 5. 删除产品
+// 删除产品
 func DeleteProduct(c echo.Context) error {
 	id := c.Param("id")
 	if err := repository.DB.Delete(&model.Product{}, id).Error; err != nil {
@@ -72,7 +72,7 @@ func DeleteProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "删除成功"})
 }
 
-// 3.31 批量更新产品排序
+// 批量更新产品排序
 func UpdateProductsSort(c echo.Context) error {
 	// 切片接数据
 	var payload struct {

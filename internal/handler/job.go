@@ -11,13 +11,13 @@ import (
 	"time"
 	"strings"
 
-	"tonfy_CMS/internal/model"      // 换成你的实际路径
-	"tonfy_CMS/internal/repository" // 换成你的实际路径
+	"tonfy_CMS/internal/model"      
+	"tonfy_CMS/internal/repository" 
 
 	"github.com/labstack/echo/v4"
 )
 
-// ========================== 核心接口：接收简历 ==========================
+// ========= 核心接口：接收简历 =============
 
 func SubmitApplication(c echo.Context) error {
 	// 1. 提取表单文本数据
@@ -76,7 +76,7 @@ func SubmitApplication(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "投递成功"})
 }
 
-// ========================== 协程专用的发邮件函数 ==========================
+// ============= 协程专用的发邮件函数 ===============
 func sendEmailNotificationAsync(position, candidateName, candidateEmail string) {
 	// 配置你的 SMTP 信息
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -158,9 +158,9 @@ func sendEmailNotificationAsync(position, candidateName, candidateEmail string) 
 	fmt.Printf("【异步任务-成功】已发送简历提醒邮件至: %s\n", receiverEmail)
 }
 
-// ========================== 3. 前台接口：拉取职位列表 ==========================
+// ============== 前台接口：拉取职位列表 ================
 
-// GetFrontJobs 获取前台展示的职位 (只查 IsActive 为 true 的，并且按拖拽权重排好序)
+// GetFrontJobs 获取前台展示的职位 
 func GetFrontJobs(c echo.Context) error {
 	var jobs []model.Job
 	if err := repository.DB.Where("is_active = ?", true).Order("sort_order DESC, created_at ASC").Find(&jobs).Error; err != nil {
@@ -169,7 +169,7 @@ func GetFrontJobs(c echo.Context) error {
 	return c.JSON(http.StatusOK, jobs)
 }
 
-// ========================== 4. 后台接口：职位管理 (CRUD) ==========================
+// =================== 后台接口：职位管理 (CRUD) ==============
 
 // GetAdminJobs 获取后台职位列表 (包含已隐藏的)
 func GetAdminJobs(c echo.Context) error {
@@ -231,9 +231,9 @@ func UpdateJobsSort(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "排序已保存"})
 }
 
-// ========================== 5. 后台接口：简历管理 ==========================
+// ===================== 后台接口：简历管理 ==================
 
-// GetApplications 获取所有收到的候选人简历 (按时间倒序，最新投递的在最上面)
+// GetApplications 获取所有收到的候选人简历 
 func GetApplications(c echo.Context) error {
 	var apps []model.JobApplication
 	if err := repository.DB.Order("created_at DESC").Find(&apps).Error; err != nil {
@@ -242,7 +242,7 @@ func GetApplications(c echo.Context) error {
 	return c.JSON(http.StatusOK, apps)
 }
 
-// UpdateApplicationStatus 修改简历状态 (比如从 "Unread" 改为 "Processed")
+// UpdateApplicationStatus 修改简历状态
 func UpdateApplicationStatus(c echo.Context) error {
 	id := c.Param("id")
 	var payload struct {
@@ -257,20 +257,20 @@ func UpdateApplicationStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "状态已更新"})
 }
 
-// DeleteApplication 删除简历（包括数据库记录和物理文件）
+// DeleteApplication 删除简历
 func DeleteApplication(c echo.Context) error {
 	id := c.Param("id")
 	
-	// 1. 先把这条记录查出来，为了获取它的文件路径
+	// 获取它的文件路径
 	var app model.JobApplication
 	if err := repository.DB.First(&app, id).Error; err == nil {
-		// 2. 物理删除文件。app.ResumeFileUrl 是 "/uploads/resumes/xxx.pdf"
+		// 物理删除文件。app.ResumeFileUrl 是 "/uploads/resumes/xxx.pdf"
 		// 用 strings.TrimPrefix 去掉开头的 "/"，变成相对路径才能删
 		filePath := strings.TrimPrefix(app.ResumeFileUrl, "/")
 		os.Remove(filePath) // 尝试删除文件，就算文件不存在报错了也不影响数据库删除
 	}
 
-	// 3. 删除数据库记录
+	//  删除数据库记录
 	repository.DB.Delete(&model.JobApplication{}, id)
 	return c.JSON(http.StatusOK, map[string]string{"message": "简历及文件已彻底删除"})
 }

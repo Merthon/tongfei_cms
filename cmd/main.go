@@ -20,15 +20,15 @@ func main() {
     }
 	fmt.Println("正在启动同飞后端服务")
 	
-	// 1. 初始化数据库
+	//  初始化数据库
 	repository.InitDB()
 
-	// 2. 初始化 Echo 实例
+	//  初始化 Echo 实例
 	e := echo.New()
 	
-	// 3. 挂载官方极其好用的基础中间件
+	//  挂载官方极其好用的基础中间件
 	e.Use(middleware.Recover()) 
-	// 4. 配置跨域 CORS
+	//  配置跨域 CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"}, // 允许所有前端跨域请求
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
@@ -47,14 +47,14 @@ func main() {
 	publicApi.GET("/front/products/:modelName/data.json", handler.GetProductDataJson)
 	publicApi.GET("/front/categories", handler.GetCategories)
 
-	//职位
+	// 职位
 	publicApi.POST("/apply", handler.SubmitApplication)
 	publicApi.GET("/front/jobs", handler.GetFrontJobs)
-	//联系我们
+	// 联系我们
 	publicApi.POST("/contact", handler.SubmitContact)
-	//发送产品邮件
+	// 发送产品邮件
 	publicApi.POST("/product/send-manual", handler.SendProductManual)
-	//首页banner
+	// 首页banner
 	publicApi.GET("/front/banners", handler.GetFrontBanners)
 
 	// 受保护的后台
@@ -69,7 +69,7 @@ func main() {
 	adminApi.PUT("/news/:id", handler.UpdateNews)
 	adminApi.DELETE("/news/:id", handler.DeleteNews)
 	adminApi.POST("/upload", handler.UploadImage)
-    //排序接口
+    // 排序接口
 	adminApi.PUT("/products/sort", handler.UpdateProductsSort)
 	// 产品管理
 	adminApi.GET("/products", handler.GetAdminProductList)
@@ -100,7 +100,6 @@ func main() {
     adminApi.DELETE("/banners/:id", handler.DeleteBanner)
     adminApi.PUT("/banners/sort", handler.UpdateBannersSort)
 	
-	//运行日志
 	// 配置日志轮转规则
     logWriter := &lumberjack.Logger{
         Filename:   "logs/system.log", // 存放在项目根目录的 logs 文件夹下
@@ -116,6 +115,6 @@ func main() {
         Format: "[${time_rfc3339}] status=${status} latency=${latency_human} ip=${remote_ip} method=${method} uri=${uri} error=${error}\n",
     }))
 
-	// 6. 启动服务，监听 8080 端口
+	//  启动服务，监听 8080 端口
 	e.Logger.Fatal(e.Start(":8080"))
 }

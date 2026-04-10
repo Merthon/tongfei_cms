@@ -14,7 +14,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-// 我们的 JWT 签名密钥 (随便写一个复杂的字符串即可)
+// JWT 签名密钥
 var JwtSecret = []byte("tongfei-cms-super-secret-key")
 
 // Login 处理后台登录
@@ -24,7 +24,7 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "请求格式错误"})
 	}
 
-	// 极简方案：固定账号密码
+	// 测试方案：固定账号密码
 	if req.Username == "admin" && req.Password == "123456" {
 		// 登录成功，生成 JWT Token
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

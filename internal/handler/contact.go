@@ -14,7 +14,7 @@ import (
 )
 
 func SubmitContact(c echo.Context) error {
-	// 1. 🚨 精准提取前台 HTML 的 name 属性
+	// 1. 精准提取前台 HTML 的 name 属性
 	company := c.FormValue("company")
 	name := c.FormValue("name")
 	tel := c.FormValue("tel")         // 对应 HTML 里的 name="tel"
@@ -38,13 +38,13 @@ func SubmitContact(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "保存留言失败"})
 	}
 
-	// 3. 异步发送邮件提醒，把所有 7 个字段都发给老板
+	// 3. 异步发送邮件提醒
 	go sendContactEmailAsync(company, name, tel, email, city, industry, content)
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "留言成功"})
 }
 
-// 邮件发送协程（包含了最全的 7 个字段）
+// 邮件发送协程
 func sendContactEmailAsync(company, name, tel, email, city, industry, content string) {
 	smtpHost := os.Getenv("SMTP_HOST")
 	smtpPort := os.Getenv("SMTP_PORT")
@@ -54,7 +54,7 @@ func sendContactEmailAsync(company, name, tel, email, city, industry, content st
 
 	subject := "【TONFY 官网】收到新的客户询盘！"
 	
-	// 把客户填写的信息整整齐齐地排版在邮件正文里
+	// 把客户填写的信息排版的邮件正文
 	body := fmt.Sprintf("您好：\r\n\r\n官网有客户提交了新的 Contact Us 留言。\r\n\r\n"+
 		"■ 客户姓名：%s\r\n"+
 		"■ 公司名称：%s\r\n"+

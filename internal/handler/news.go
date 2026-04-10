@@ -15,7 +15,7 @@ func GetNewsList(c echo.Context) error {
 	
 	result := repository.DB.Select("id", "title", "date", "description", "image").Order("date DESC, id DESC").Find(&newsList)
 	if result.Error != nil {
-		// Echo 直接 return c.JSON，非常简洁
+		// Echo 直接 return c.JSON
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取新闻列表失败"})
 	}
 
@@ -53,18 +53,18 @@ func CreateNews(c echo.Context) error {
 func UpdateNews(c echo.Context) error {
 	id := c.Param("id")
 
-	// 1. 先去数据库里查一下，看看这条新闻存不存在
+	// 先去数据库里查一下，看看这条新闻存不存在
 	var news model.News
 	if err := repository.DB.First(&news, id).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "找不到要修改的新闻"})
 	}
 
-	// 2. 将前端传过来的最新 JSON 数据绑定到这条新闻上
+	// 将前端传过来的最新 JSON 数据绑定到这条新闻上
 	if err := c.Bind(&news); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "数据格式不正确"})
 	}
 
-	// 3. 保存回数据库 (GORM 会自动识别主键 ID 并执行 UPDATE 语句)
+	// 保存回数据库
 	repository.DB.Save(&news)
 
 	return c.JSON(http.StatusOK, news)

@@ -26,7 +26,7 @@
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4 text-center">
                   <h5 class="card-title">新闻中心</h5>
                   <p class="card-text opacity-75">发布和管理公司最新动态</p>
-                  <a href="/admin/news.html" class="btn btn-light btn-sm mt-2 fw-bold text-primary">前往管理 &rarr;</a>
+                  <a href="javascript:void(0)" onclick="tryNavigate('news', '/admin/news.html')" class="btn btn-light btn-sm mt-2 fw-bold text-primary">前往管理 &rarr;</a>
                 </div>
               </div>
             </div>
@@ -36,7 +36,7 @@
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4 text-center">
                   <h5 class="card-title">行业分类</h5>
                   <p class="card-text opacity-75">管理行业菜单与Banner文案</p>
-                  <a href="/admin/category.html" class="btn btn-light btn-sm mt-2 fw-bold text-info">前往管理 &rarr;</a>
+                  <a href="javascript:void(0)" onclick="tryNavigate('product', '/admin/category.html')" class="btn btn-light btn-sm mt-2 fw-bold text-info">前往管理 &rarr;</a>
                 </div>
               </div>
             </div>
@@ -46,7 +46,7 @@
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4 text-center">
                   <h5 class="card-title">产品图册</h5>
                   <p class="card-text opacity-75">维护核心产品线数据</p>
-                  <a href="/admin/product.html" class="btn btn-light btn-sm mt-2 fw-bold text-success">前往管理 &rarr;</a>
+                  <a href="javascript:void(0)" onclick="tryNavigate('product', '/admin/product.html')" class="btn btn-light btn-sm mt-2 fw-bold text-success">前往管理 &rarr;</a>
                 </div>
               </div>
             </div>
@@ -56,7 +56,7 @@
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4 text-center">
                   <h5 class="card-title">招聘与职位</h5>
                   <p class="card-text opacity-75">发布职位与处理候选人简历</p>
-                  <a href="/admin/job.html" class="btn btn-light btn-sm mt-2 fw-bold text-danger">前往管理 &rarr;</a>
+                  <a href="javascript:void(0)" onclick="tryNavigate('job', '/admin/job.html')" class="btn btn-light btn-sm mt-2 fw-bold text-danger">前往管理 &rarr;</a>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4 text-center">
                   <h5 class="card-title">📺 首页大屏</h5>
                   <p class="card-text opacity-75">管理主页首屏视频与轮播图</p>
-                  <a href="/admin/banner.html" class="btn btn-light btn-sm mt-2 fw-bold text-dark">前往管理 &rarr;</a>
+                  <a href="javascript:void(0)" onclick="tryNavigate('banner', '/admin/banner.html')" class="btn btn-light btn-sm mt-2 fw-bold text-dark">前往管理 &rarr;</a>
                 </div>
               </div>
             </div>
@@ -80,7 +80,6 @@
     <script src="./common.js"></script>
 
     <script>
-      // 告诉 common.js，现在要把 "index" (后台首页) 这个菜单高亮！
       initLayout('index');
     </script>
   </body>

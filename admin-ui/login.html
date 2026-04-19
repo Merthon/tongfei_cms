@@ -74,8 +74,11 @@
           const result = await response.json();
 
           if (response.ok) {
-            // 登录成功，将 Token 存入浏览器的 localStorage
+            // 🚨 核心修改点：同时存入 Token、角色和权限模块！
             localStorage.setItem('cms_token', result.token);
+            localStorage.setItem('cms_role', result.role);       // 新增：存入角色 (如 super_admin)
+            localStorage.setItem('cms_modules', result.modules); // 新增：存入权限 (如 news,product)
+            
             // 跳转到后台管理主页
             window.location.href = '/admin/index.html';
           } else {

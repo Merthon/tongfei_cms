@@ -72,6 +72,10 @@ func main() {
 	adminApi.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: handler.JwtSecret,
 	}))
+	adminApi.POST("/account/create_editor", handler.CreateEditor, handler.CheckPermission("super_admin"))
+	adminApi.GET("/account/list", handler.GetAdminList, handler.CheckPermission("super_admin"))
+    adminApi.DELETE("/account/:id", handler.DeleteEditor, handler.CheckPermission("super_admin"))
+    adminApi.PUT("/account/:id", handler.UpdateEditor, handler.CheckPermission("super_admin"))
 
 	// 公共接口 (只要登录了就能用，不加模块拦截器)
 	adminApi.POST("/upload", handler.UploadImage)

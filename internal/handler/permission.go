@@ -94,3 +94,79 @@ func CreateEditor(c echo.Context) error {
 		"modules": newEditor.Modules,
 	})
 }
+// ==========================================
+// 获取子账号列表 (查)
+// ==========================================
+func GetAdminList(c echo.Context) error {
+	var users []model.AdminUser
+	// 🚨 只查普通编辑，把超级管理员隐藏起来，防止老板不小心把自己给删了
+	if err := repository.DB.Where("role = ?", "editor").Find(&users).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取账号列表失败"})
+	}
+
+	// 安全起见：把返回给前端的密码字段置空
+	for i := range users {
+		users[i].Password = ""
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
+// ==========================================
+// 删除子账号 (删)
+// ==========================================
+func DeleteEditor(c echo.Context) error {
+	id := c.Param("id")
+	var user model.AdminUser
+	
+	if err := repository.DB.First(&user, id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "该账号不存在"})
+	}
+	
+	// 终极安全锁：绝对不允许删除超管
+	if user.Role == "super_admin" {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": "无法删除超级管理员账号"})
+	}
+
+	if err := repository.DB.Delete(&user).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "删除失败"})
+	}
+	return c.JSON(http.StatusOK, map[string]string{"message": "账号删除成功"})
+}
+
+// ==========================================
+// 修改子账号权限或密码 (改)
+// ==========================================
+type UpdateEditorRequest struct {
+	Password string `json:"password"` // 如果为空，表示不修改密码
+	Modules  string `json:"modules"`
+}
+
+func UpdateEditor(c echo.Context) error {
+	id := c.Param("id")
+	req := new(UpdateEditorRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "请求格式错误"})
+	}
+
+	var user model.AdminUser
+	if err := repository.DB.First(&user, id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "该账号不存在"})
+	}
+
+	if user.Role == "super_admin" {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": "无法修改超级管理员"})
+	}
+
+	// 如果传了新密码，就更新密码
+	if req.Password != "" {
+		user.Password = req.Password
+	}
+	// 更新权限模块
+	user.Modules = req.Modules
+
+	if err := repository.DB.Save(&user).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "更新失败"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "账号更新成功"})
+}

@@ -83,7 +83,8 @@ func sendEmailNotificationAsync(position, candidateName, candidateEmail string) 
 	smtpPort := os.Getenv("SMTP_PORT")
 	senderEmail := os.Getenv("SMTP_USER")
 	senderPass := os.Getenv("SMTP_PASS")
-	receiverEmail := os.Getenv("HR_EMAIL")
+	receiverEmailStr := os.Getenv("HR_EMAIL")
+	receivers := strings.Split(receiverEmailStr, ",")
 
 	// 1. 组装支持中文的邮件头和正文
 	subject := "【TONFY 招聘系统】收到一份新简历！"
@@ -91,7 +92,7 @@ func sendEmailNotificationAsync(position, candidateName, candidateEmail string) 
 
 	header := make(map[string]string)
 	header["From"] = "TONFY CMS <" + senderEmail + ">"
-	header["To"] = receiverEmail
+	header["To"] = receiverEmailStr
 	header["Subject"] = subject
 	header["Content-Type"] = "text/plain; charset=UTF-8" // 解决中文乱码
 
@@ -133,9 +134,14 @@ func sendEmailNotificationAsync(position, candidateName, candidateEmail string) 
 		fmt.Printf("【异步任务-报错】设置发件人失败: %v\n", err)
 		return
 	}
-	if err = client.Rcpt(receiverEmail); err != nil {
-		fmt.Printf("【异步任务-报错】设置收件人失败: %v\n", err)
-		return
+	for _, email := range receivers {
+		// 去除可能不小心打上的空格
+		email = strings.TrimSpace(email) 
+		if email != "" {
+			if err = client.Rcpt(email); err != nil {
+				fmt.Printf("【异步任务-报错】设置收件人 %s 失败: %v\n", email, err)
+			}
+		}
 	}
 
 	// 5. 写入并发送内容
@@ -155,7 +161,7 @@ func sendEmailNotificationAsync(position, candidateName, candidateEmail string) 
 		return
 	}
 
-	fmt.Printf("【异步任务-成功】已发送简历提醒邮件至: %s\n", receiverEmail)
+	fmt.Printf("【异步任务-成功】已发送简历提醒邮件至: %s\n", receiverEmailStr)
 }
 
 // ============== 前台接口：拉取职位列表 ================

@@ -118,8 +118,8 @@
         // 记得在 common.js 里给首页大屏加个入口并传 'banner' 参数
         if (typeof initLayout === 'function') initLayout('banner');
 
-        const API_BASE = 'http://localhost:8080/api/admin/banners';
-        const UPLOAD_API = 'http://localhost:8080/api/admin/upload';
+        const API_BASE = '/api/admin/banners';
+        const UPLOAD_API = '/api/admin/upload';
         const myModal = new bootstrap.Modal(document.getElementById('bannerModal'));
         let bannersData = [];
         let sortableInstance = null;
@@ -138,7 +138,7 @@
                     const typeIcon = b.media_type === 'video' ? '🎥 视频' : '🖼️ 图片';
                     
                     let previewHtml = '';
-                    const fullUrl = b.media_url.startsWith('http') ? b.media_url : 'http://localhost:8080' + b.media_url;
+                    const fullUrl = b.media_url;
                     if (b.media_type === 'video') {
                         previewHtml = `<video src="${fullUrl}" style="height:50px; border-radius:4px; object-fit:cover;" muted></video>`;
                     } else {

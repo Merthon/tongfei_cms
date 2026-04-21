@@ -166,7 +166,7 @@
           // 兼容新老图片路径
           let imgUrl = news.image;
           if (imgUrl && imgUrl.startsWith('/uploads')) {
-            imgUrl = 'http://localhost:8080' + imgUrl;
+            imgUrl = imgUrl;
           }
 
           const tr = document.createElement('tr');
@@ -229,7 +229,7 @@
 
       async function editNews(id) {
         try {
-          const res = await fetch(`http://localhost:8080/api/news/${id}`);
+          const res = await fetch(`/api/news/${id}`);
           if (!res.ok) throw new Error('获取新闻详情失败');
           const news = await res.json();
 
@@ -262,8 +262,8 @@
 
         const method = id ? 'PUT' : 'POST';
         const url = id
-          ? `http://localhost:8080/api/admin/news/${id}`
-          : 'http://localhost:8080/api/admin/news';
+          ? `/api/admin/news/${id}`
+          : '/api/admin/news';
 
         try {
           const res = await fetch(url, {
@@ -291,7 +291,7 @@
       async function deleteNews(id) {
         if (!confirm('确定要彻底删除这条新闻吗？')) return;
         try {
-          const res = await fetch(`http://localhost:8080/api/admin/news/${id}`, {
+          const res = await fetch(`/api/admin/news/${id}`, {
             method: 'DELETE',
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
           });
@@ -320,7 +320,7 @@
               const newName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
               formData.append('file', result, newName);
 
-              fetch('http://localhost:8080/api/admin/upload', {
+              fetch('/api/admin/upload', {
                 method: 'POST',
                 headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
                 body: formData,
@@ -359,7 +359,7 @@
                       const newName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
                       formData.append('file', result, newName);
 
-                      fetch('http://localhost:8080/api/admin/upload', {
+                      fetch('/api/admin/upload', {
                         method: 'POST',
                         headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
                         body: formData,
@@ -367,7 +367,7 @@
                         .then((res) => res.json())
                         .then((data) => {
                           // 兼容处理：拼接完整后端地址插入到编辑器中
-                          const fullUrl = 'http://localhost:8080' + data.url;
+                          const fullUrl =  data.url;
                           insertFn(fullUrl, '图片', fullUrl);
                         })
                         .catch((err) => alert('正文图片上传失败：' + err.message));

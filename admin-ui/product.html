@@ -217,9 +217,7 @@
                           </div>
                         </div>
                         <div class="mb-4">
-                          <label class="form-label text-muted small">
-                            行业文案 (每行一句)
-                          </label>
+                          <label class="form-label text-muted small">行业文案 (每行一句)</label>
                           <textarea
                             class="form-control"
                             id="p-ind-text"
@@ -335,15 +333,15 @@
       // ================= 智能路径解析器 =================
       function getFileUrl(fileStr, dirName) {
         if (!fileStr) return '';
-        if (fileStr.startsWith('/uploads')) return 'http://localhost:8080' + fileStr;
+        if (fileStr.startsWith('/uploads')) return fileStr;
         if (fileStr.startsWith('http')) return fileStr;
-        return `http://localhost:8080/products/${dirName}/${fileStr}`;
+        return `/products/${dirName}/${fileStr}`;
       }
 
       // ================= 列表获取与分类魔法 =================
       async function loadProductList() {
         try {
-          const res = await fetch('http://localhost:8080/api/admin/products', {
+          const res = await fetch('/api/admin/products', {
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
           });
           const data = await res.json();
@@ -432,68 +430,68 @@
         initTableSort();
       }
       // 在最上方定义全局变量的地方，加一句：
-    let sortableInstance = null;
+      let sortableInstance = null;
 
-    // ================= 拖拽排序核心引擎 =================
-    function initTableSort() {
+      // ================= 拖拽排序核心引擎 =================
+      function initTableSort() {
         const el = document.getElementById('product-tbody');
         if (!el) return;
 
         // 如果之前已经绑定过，先销毁它，防止“多重影分身”打架
         if (sortableInstance) {
-            sortableInstance.destroy();
+          sortableInstance.destroy();
         }
 
         sortableInstance = Sortable.create(el, {
-            handle: '.drag-handle', // 🚨 魔法：只有鼠标捏住那个小图标，才能拖动！体验极佳！
-            animation: 150,         // 动画过度时间
-            ghostClass: 'bg-light', // 被拖动的那个空位的背景色
-            onEnd: async function() {
-                // 拖拽松手瞬间，收集所有 ID
-                const ids = [];
-                document.querySelectorAll('#product-tbody tr').forEach(tr => {
-                    const id = tr.getAttribute('data-id');
-                    if (id) ids.push(parseInt(id));
-                });
-
-                // 如果是在“全部分类”下拖动，警告一下（因为全部分类拖动意义不大，最好是在单个分类下排）
-                const currentCat = document.getElementById('category-filter').value;
-                if (currentCat === "") {
-                    // 可选：提醒用户最好在具体行业里排序
-                    console.log("提示：最好选择一个具体的行业后再进行排序，这样前台展示更精准。");
-                }
-
-                // 把新的顺序发给 Go 后端
-                await saveNewSortOrder(ids);
-            }
-        });
-    }
-
-    // ================= 发送给 Go 的接口 =================
-    async function saveNewSortOrder(ids) {
-        try {
-            const res = await fetch('http://localhost:8080/api/admin/products/sort', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('cms_token')
-                },
-                body: JSON.stringify({ ids: ids })
+          handle: '.drag-handle', // 🚨 魔法：只有鼠标捏住那个小图标，才能拖动！体验极佳！
+          animation: 150, // 动画过度时间
+          ghostClass: 'bg-light', // 被拖动的那个空位的背景色
+          onEnd: async function () {
+            // 拖拽松手瞬间，收集所有 ID
+            const ids = [];
+            document.querySelectorAll('#product-tbody tr').forEach((tr) => {
+              const id = tr.getAttribute('data-id');
+              if (id) ids.push(parseInt(id));
             });
-            if (res.ok) {
-                // 可选：在这里加个漂亮的小 Toast 提示“排序已保存”
-                console.log('排序同步成功');
-            } else {
-                alert('排序保存失败');
+
+            // 如果是在“全部分类”下拖动，警告一下（因为全部分类拖动意义不大，最好是在单个分类下排）
+            const currentCat = document.getElementById('category-filter').value;
+            if (currentCat === '') {
+              // 可选：提醒用户最好在具体行业里排序
+              console.log('提示：最好选择一个具体的行业后再进行排序，这样前台展示更精准。');
             }
+
+            // 把新的顺序发给 Go 后端
+            await saveNewSortOrder(ids);
+          },
+        });
+      }
+
+      // ================= 发送给 Go 的接口 =================
+      async function saveNewSortOrder(ids) {
+        try {
+          const res = await fetch('/api/admin/products/sort', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + localStorage.getItem('cms_token'),
+            },
+            body: JSON.stringify({ ids: ids }),
+          });
+          if (res.ok) {
+            // 可选：在这里加个漂亮的小 Toast 提示“排序已保存”
+            console.log('排序同步成功');
+          } else {
+            alert('排序保存失败');
+          }
         } catch (error) {
-            console.error(error);
+          console.error(error);
         }
-    }
+      }
       // 发送排序请求
       async function saveNewSortOrder(ids) {
         try {
-          const res = await fetch('http://localhost:8080/api/admin/products/sort', {
+          const res = await fetch('/api/admin/products/sort', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -564,7 +562,7 @@
       // ================= 弹窗交互：编辑数据回显 =================
       async function editProduct(id) {
         try {
-          const res = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
+          const res = await fetch(`/api/admin/products/${id}`, {
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
           });
           if (!res.ok) throw new Error('获取详情失败');
@@ -679,9 +677,7 @@
         baseData.detail_data = JSON.stringify(detailDataObj);
 
         const method = pId ? 'PUT' : 'POST';
-        const url = pId
-          ? `http://localhost:8080/api/admin/products/${pId}`
-          : 'http://localhost:8080/api/admin/products';
+        const url = pId ? `/api/admin/products/${pId}` : '/api/admin/products';
 
         try {
           const res = await fetch(url, {
@@ -708,9 +704,9 @@
 
       // ================= 删除产品 =================
       async function deleteProduct(id) {
-        if (!confirm('🚨 确定要彻底删除该产品档案吗？')) return;
+        if (!confirm('确定要彻底删除该产品档案吗？')) return;
         try {
-          const res = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
+          const res = await fetch(`/api/admin/products/${id}`, {
             method: 'DELETE',
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
           });
@@ -758,7 +754,7 @@
           const formData = new FormData();
           formData.append('file', fileToUpload, originalName);
 
-          fetch('http://localhost:8080/api/admin/upload', {
+          fetch('/api/admin/upload', {
             method: 'POST',
             headers: { Authorization: 'Bearer ' + localStorage.getItem('cms_token') },
             body: formData,
@@ -768,7 +764,7 @@
               document.getElementById(hiddenId).value = data.url;
               if (previewId) {
                 const imgEl = document.getElementById(previewId);
-                imgEl.src = 'http://localhost:8080' + data.url;
+                imgEl.src = data.url;
                 imgEl.classList.remove('d-none');
               }
               if (hiddenId === 'p-file-url') {

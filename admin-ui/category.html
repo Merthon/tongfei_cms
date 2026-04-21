@@ -151,12 +151,12 @@
     <script src="./common.js"></script>
 
     <script>
-      // 🚨 触发你的菜单魔法，告诉它现在高亮“行业分类(category)”
+      // 告诉它现在高亮“行业分类(category)”
       if (typeof initLayout === 'function') {
         initLayout('category');
       }
 
-      const API_BASE = 'http://localhost:8080/api/admin/categories';
+      const API_BASE = '/api/admin/categories';
       const myModal = new bootstrap.Modal(document.getElementById('categoryModal'));
       let sortableInstance = null;
       let categoriesData = [];
@@ -174,7 +174,7 @@
             const tr = document.createElement('tr');
             tr.setAttribute('data-id', c.id);
             let imgHtml = c.banner_image
-              ? `<img src="${c.banner_image.startsWith('http') ? c.banner_image : 'http://localhost:8080' + c.banner_image}" style="height:40px; border-radius:4px; object-fit:cover;">`
+              ? `<img src="${c.banner_image}" style="height:40px; border-radius:4px; object-fit:cover;">`
               : '<span class="badge bg-secondary">无图</span>';
 
             tr.innerHTML = `
@@ -243,9 +243,7 @@
             const previewDiv = document.getElementById('cat-image-preview');
             if (cat.banner_image) {
               previewDiv.style.display = 'block';
-              previewDiv.querySelector('img').src = cat.banner_image.startsWith('http')
-                ? cat.banner_image
-                : 'http://localhost:8080' + cat.banner_image;
+              previewDiv.querySelector('img').src = cat.banner_image;
             } else {
               previewDiv.style.display = 'none';
             }
@@ -312,11 +310,11 @@
 
         // 打包文件准备发送
         const formData = new FormData();
-        formData.append('file', file); // 🚨 注意：这里的 'file' 要和你 Go 后端接收文件的字段名一致
+        formData.append('file', file); // 这里的 'file' 要和你 Go 后端接收文件的字段名一致
 
         try {
           //这里的 URL 换成你原本用来上传产品图片的那个接口地址！
-          const uploadUrl = 'http://localhost:8080/api/admin/upload';
+          const uploadUrl = '/api/admin/upload';
 
           const res = await fetch(uploadUrl, {
             method: 'POST',
@@ -337,8 +335,7 @@
             // 2. 显示图片预览
             const previewDiv = document.getElementById('cat-image-preview');
             previewDiv.style.display = 'block';
-            // 加上 8080 前缀以便在后台能看到图
-            previewDiv.querySelector('img').src = 'http://localhost:8080' + imgUrl;
+            previewDiv.querySelector('img').src =  imgUrl;
           } else {
             alert('图片上传失败，请检查后端接口！');
           }

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-
+	"os"
 	"tonfy_CMS/internal/handler"
 	"tonfy_CMS/internal/repository"
 
@@ -137,5 +137,13 @@ func main() {
 	}))
 
 	// 启动服务，监听端口
-	e.Logger.Fatal(e.Start(":8088"))
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8088" //读取不到配置，就默认用 8088 端口
+	}
+	
+	fmt.Printf("同飞后端服务即将启动，监听端口: %s\n", port)
+
+	// 启动服务，监听动态端口
+	e.Logger.Fatal(e.Start(":" + port))
 }

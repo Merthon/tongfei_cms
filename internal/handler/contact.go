@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strings"
 
 	"tonfy_CMS/internal/model"
 	"tonfy_CMS/internal/repository"
@@ -50,7 +51,8 @@ func sendContactEmailAsync(company, name, tel, email, city, industry, content st
 	smtpPort := os.Getenv("SMTP_PORT")
 	senderEmail := os.Getenv("SMTP_USER")
 	senderPass := os.Getenv("SMTP_PASS")
-	receiverEmail := os.Getenv("HR_EMAIL")
+	receiverEmailStr := os.Getenv("HR_EMAIL")
+	receivers := strings.Split(receiverEmailStr, ",")
 
 	subject := "【TONFY 官网】收到新的客户询盘！"
 	
@@ -67,7 +69,7 @@ func sendContactEmailAsync(company, name, tel, email, city, industry, content st
 
 	header := make(map[string]string)
 	header["From"] = "TONFY CMS <" + senderEmail + ">"
-	header["To"] = receiverEmail
+	header["To"] = receiverEmailStr
 	header["Subject"] = subject
 	header["Content-Type"] = "text/plain; charset=UTF-8"
 
@@ -89,7 +91,12 @@ func sendContactEmailAsync(company, name, tel, email, city, industry, content st
 	auth := smtp.PlainAuth("", senderEmail, senderPass, smtpHost)
 	if err = client.Auth(auth); err != nil { return }
 	if err = client.Mail(senderEmail); err != nil { return }
-	if err = client.Rcpt(receiverEmail); err != nil { return }
+	for _, email := range receivers {
+		email = strings.TrimSpace(email)
+		if email != "" {
+			client.Rcpt(email) // 群发指令
+		}
+	}
 
 	w, err := client.Data()
 	if err != nil { return }

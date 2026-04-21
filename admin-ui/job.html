@@ -138,8 +138,8 @@
         // 触发菜单高亮 (确保你的 common.js 里有 job 这个判断)
         if (typeof initLayout === 'function') initLayout('job');
 
-        const API_BASE_JOB = 'http://localhost:8080/api/admin/jobs';
-        const API_BASE_APP = 'http://localhost:8080/api/admin/applications';
+        const API_BASE_JOB = '/api/admin/jobs';
+        const API_BASE_APP = '/api/admin/applications';
         const myJobModal = new bootstrap.Modal(document.getElementById('jobModal'));
         
         let jobsData = [];
@@ -271,7 +271,7 @@
                     `;
 
                     // 简历下载链接拼接
-                    const resumeLink = app.resume_file_url.startsWith('http') ? app.resume_file_url : 'http://localhost:8080' + app.resume_file_url;
+                    const resumeLink = app.resume_file_url;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `

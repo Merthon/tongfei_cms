@@ -136,6 +136,6 @@ func main() {
 		Format: "[${time_rfc3339}] status=${status} latency=${latency_human} ip=${remote_ip} method=${method} uri=${uri} error=${error}\n",
 	}))
 
-	// 启动服务，监听 8080 端口
-	e.Logger.Fatal(e.Start(":8080"))
+	// 启动服务，监听端口
+	e.Logger.Fatal(e.Start(":8088"))
 }

@@ -14,8 +14,6 @@ import (
 func CheckPermission(requiredModule string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			// 1. 获取 JWT 中间件解析后的 Token 数据
-			// 注意："user" 是 Echo JWT 中间件默认的 Context Key
 			userToken, ok := c.Get("user").(*jwt.Token)
 			if !ok {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "未授权的访问"})
@@ -29,22 +27,22 @@ func CheckPermission(requiredModule string) echo.MiddlewareFunc {
 			role, _ := claims["role"].(string)
 			modules, _ := claims["modules"].(string)
 
-			// 2. 超级管理员拥有最高权限，直接放行
+			// 超级管理员拥有最高权限，直接放行
 			if role == "super_admin" {
 				return next(c)
 			}
 
-			// 3. 如果需要的是超级管理员权限，且当前用户不是，直接拦截
+			// 如果需要的是超级管理员权限，且当前用户不是，直接拦截
 			if requiredModule == "super_admin" {
 				return c.JSON(http.StatusForbidden, map[string]string{"error": "仅超级管理员可操作"})
 			}
 
-			// 4. 普通管理员，校验其模块权限中是否包含需要的模块
+			// 普通管理员，校验其模块权限中是否包含需要的模块
 			if strings.Contains(modules, requiredModule) {
 				return next(c)
 			}
 
-			// 5. 无权限，拦截请求
+			// 无权限，拦截请求
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "您没有此模块的操作权限"})
 		}
 	}
@@ -53,7 +51,7 @@ func CheckPermission(requiredModule string) echo.MiddlewareFunc {
 type CreateEditorRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Modules  string `json:"modules"` // 前端传过来的权限字符串，比如 "news,product"
+	Modules  string `json:"modules"` 
 }
 
 // CreateEditor 超级管理员创建子账号
@@ -99,7 +97,7 @@ func CreateEditor(c echo.Context) error {
 // ==========================================
 func GetAdminList(c echo.Context) error {
 	var users []model.AdminUser
-	// 🚨 只查普通编辑，把超级管理员隐藏起来，防止老板不小心把自己给删了
+	// 只查普通编辑
 	if err := repository.DB.Where("role = ?", "editor").Find(&users).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "获取账号列表失败"})
 	}
@@ -157,7 +155,6 @@ func UpdateEditor(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, map[string]string{"error": "无法修改超级管理员"})
 	}
 
-	// 如果传了新密码，就更新密码
 	if req.Password != "" {
 		user.Password = req.Password
 	}

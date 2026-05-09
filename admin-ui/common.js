@@ -94,6 +94,9 @@ function initLayout(activeMenu) {
             <a href="javascript:void(0)" onclick="tryNavigate('banner', '/admin/banner.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'banner' ? 'active bg-primary' : ''}">
                 📺 首页banner管理
             </a>
+            <a href="javascript:void(0)" onclick="tryNavigate('service', '/admin/service.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'service' ? 'active bg-primary' : ''}">
+                🌐 服务支持页
+            </a>
     `;
 
     // ---- 2. 🚨 判断身份：只有超级管理员，才拼接账号管理菜单 ----

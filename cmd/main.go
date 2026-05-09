@@ -64,6 +64,8 @@ func main() {
 	// 首页banner
 	publicApi.GET("/front/banners", handler.GetFrontBanners)
 
+	// 服务
+	publicApi.GET("/front/service-page", handler.GetServicePage)
 	// ==========================================
 	// 受保护的后台 API 路由组 (含权限拦截)
 	// ==========================================
@@ -118,6 +120,9 @@ func main() {
 	adminApi.PUT("/banners/:id", handler.UpdateBanner, handler.CheckPermission("banner"))
 	adminApi.DELETE("/banners/:id", handler.DeleteBanner, handler.CheckPermission("banner"))
 	adminApi.PUT("/banners/sort", handler.UpdateBannersSort, handler.CheckPermission("banner"))
+    // 服务
+	adminApi.GET("/service-page", handler.GetServicePage, handler.CheckPermission("service"))
+    adminApi.PUT("/service-page", handler.UpdateServicePage, handler.CheckPermission("service"))
 
 	// ==========================================
 	// 配置日志轮转规则

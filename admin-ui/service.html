@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>服务支持页管理 - TONFY CMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .card-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .preview-img { max-width: 300px; max-height: 200px; border-radius: 8px; margin-top: 10px; display: none; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">TONFY CMS - 服务页管理</a>
+            <a href="index.html" class="btn btn-outline-light btn-sm">返回主控台</a>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row">
+            <div class="col-12">
+                <form id="serviceForm">
+                    
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">1. 第一屏：地球数据统计</div>
+                        <div class="card-body row">
+                            <div class="col-md-6 mb-3">
+                                <label>数据1 数字 (如: 49)</label>
+                                <input type="text" class="form-control" id="stat1_num" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>数据1 描述</label>
+                                <input type="text" class="form-control" id="stat1_label" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>数据2 数字 (如: 17)</label>
+                                <input type="text" class="form-control" id="stat2_num" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>数据2 描述</label>
+                                <input type="text" class="form-control" id="stat2_label" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-success text-white">2. 第二屏：专家团队介绍</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label>段落 1</label>
+                                <textarea class="form-control" id="team_text1" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label>段落 2</label>
+                                <textarea class="form-control" id="team_text2" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label>团队配图</label>
+                                <input type="file" class="form-control" id="team_image_input" accept="image/*">
+                                <img id="team_image_preview" class="preview-img" alt="预览图">
+                                <input type="hidden" id="team_image_url">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-info text-white">3. 第四屏：六大核心优势卡片</div>
+                        <div class="card-body" id="cards-container">
+                            </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">保存所有更改</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('cms_token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        const headers = { 'Authorization': 'Bearer ' + token };
+
+        // 页面加载时拉取数据
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/admin/service-page', { headers });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
+                const data = await res.json();
+                
+                // 填充基础数据
+                document.getElementById('stat1_num').value = data.stat1_num || '';
+                document.getElementById('stat1_label').value = data.stat1_label || '';
+                document.getElementById('stat2_num').value = data.stat2_num || '';
+                document.getElementById('stat2_label').value = data.stat2_label || '';
+                document.getElementById('team_text1').value = data.team_text1 || '';
+                document.getElementById('team_text2').value = data.team_text2 || '';
+                
+                // 图片回显 (利用 Nginx 路由，不带 8080)
+                if (data.team_image) {
+                    document.getElementById('team_image_url').value = data.team_image;
+                    const imgPreview = document.getElementById('team_image_preview');
+                    imgPreview.src = data.team_image;
+                    imgPreview.style.display = 'block';
+                }
+
+                // 解析 JSON 并渲染卡片表单
+                let cards = [];
+                try {
+                    cards = JSON.parse(data.cards_json || '[]');
+                } catch (e) { console.error("JSON解析失败", e); }
+                renderCardsForm(cards);
+
+            } catch (err) {
+                console.error('获取数据失败:', err);
+                alert('网络错误，请检查控制台');
+            }
+        });
+
+        // 渲染 6 个卡片的输入框
+        function renderCardsForm(cards) {
+            let html = '';
+            // 确保有 6 个卡片的数据，哪怕是空的
+            for (let i = 0; i < 6; i++) {
+                const card = cards[i] || { title: '', items: ['', '', ''] };
+                html += `
+                <div class="card-box">
+                    <h5 class="text-primary mb-3">卡片 ${i + 1}</h5>
+                    <div class="mb-2">
+                        <label class="form-label text-muted small">卡片主标题</label>
+                        <input type="text" class="form-control card-input-title" data-index="${i}" value="${card.title || ''}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label text-muted small">列表项 1</label>
+                            <input type="text" class="form-control card-input-item" data-index="${i}" data-item="0" value="${card.items[0] || ''}">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label text-muted small">列表项 2</label>
+                            <input type="text" class="form-control card-input-item" data-index="${i}" data-item="1" value="${card.items[1] || ''}">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label text-muted small">列表项 3</label>
+                            <input type="text" class="form-control card-input-item" data-index="${i}" data-item="2" value="${card.items[2] || ''}">
+                        </div>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('cards-container').innerHTML = html;
+        }
+
+        // 图片上传逻辑 (复用你现有的上传接口)
+        document.getElementById('team_image_input').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            try {
+                // 假设你的上传接口还是 /api/admin/upload
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    headers: headers,
+                    body: fd
+                });
+                const result = await res.json();
+                
+                if (res.ok) {
+                    document.getElementById('team_image_url').value = result.url;
+                    const imgPreview = document.getElementById('team_image_preview');
+                    imgPreview.src = result.url;
+                    imgPreview.style.display = 'block';
+                } else {
+                    alert('上传失败: ' + (result.error || '未知错误'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('上传出错');
+            }
+        });
+
+        // 提交保存逻辑
+        document.getElementById('serviceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 组装 6 个卡片的 JSON 数据
+            let cardsData = [];
+            for (let i = 0; i < 6; i++) {
+                const titleInput = document.querySelector(`.card-input-title[data-index="${i}"]`);
+                const item0 = document.querySelector(`.card-input-item[data-index="${i}"][data-item="0"]`);
+                const item1 = document.querySelector(`.card-input-item[data-index="${i}"][data-item="1"]`);
+                const item2 = document.querySelector(`.card-input-item[data-index="${i}"][data-item="2"]`);
+                
+                cardsData.push({
+                    title: titleInput ? titleInput.value : '',
+                    items: [
+                        item0 ? item0.value : '',
+                        item1 ? item1.value : '',
+                        item2 ? item2.value : ''
+                    ]
+                });
+            }
+
+            const payload = {
+                stat1_num: document.getElementById('stat1_num').value,
+                stat1_label: document.getElementById('stat1_label').value,
+                stat2_num: document.getElementById('stat2_num').value,
+                stat2_label: document.getElementById('stat2_label').value,
+                team_text1: document.getElementById('team_text1').value,
+                team_text2: document.getElementById('team_text2').value,
+                team_image: document.getElementById('team_image_url').value,
+                cards_json: JSON.stringify(cardsData) // 核心：把数组压成 JSON 字符串发给后端
+            };
+
+            try {
+                const res = await fetch('/api/admin/service-page', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    alert(' 保存成功！前台页面已同步更新。');
+                } else {
+                    const errData = await res.json();
+                    alert('保存失败: ' + (errData.error || '未知错误'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('网络出错，保存失败');
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./common.js"></script>
+    <script>
+        // 告诉 common.js 当前是 'service' 菜单高亮
+        initLayout('service'); 
+    </script>
+</body>
+</html>

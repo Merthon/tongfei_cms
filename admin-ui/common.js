@@ -97,12 +97,15 @@ function initLayout(activeMenu) {
             <a href="javascript:void(0)" onclick="tryNavigate('service', '/admin/service.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'service' ? 'active bg-primary' : ''}">
                 🌐 服务支持页
             </a>
+            <a href="javascript:void(0)" onclick="tryNavigate('super_admin', '/admin/nav_config.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'nav_config' ? 'active bg-primary' : ''}">
+                🧭 全局导航配置
+            </a>
             <a href="javascript:void(0)" onclick="tryNavigate('application', '/admin/applications.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'applications' ? 'active bg-primary' : ''}">
                 🌍 应用场景
             </a>
             <a href="javascript:void(0)" onclick="tryNavigate('about', '/admin/about_page.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'about' ? 'active bg-primary' : ''}">
-    📖 关于同飞配置
-</a>
+                📖 关于同飞配置
+            </a>
     `;
 
   // ---- 2. 🚨 判断身份：只有超级管理员，才拼接账号管理菜单 ----

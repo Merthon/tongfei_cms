@@ -72,6 +72,8 @@ func main() {
 
 	// 关于
 	publicApi.GET("/front/about-page", handler.GetAboutPage)
+	// 导航
+	publicApi.GET("/front/nav-data", handler.GetFullNavData)
 	// ==========================================
 	// 受保护的后台 API 路由组 (含权限拦截)
 	// ==========================================
@@ -137,6 +139,10 @@ func main() {
 	// 关于页面管理
 	adminApi.GET("/about-page", handler.GetAboutPage, handler.CheckPermission("about"))
     adminApi.PUT("/about-page", handler.UpdateAboutPage, handler.CheckPermission("about"))
+
+	// 导航
+	adminApi.GET("/nav-config", handler.GetFullNavData, handler.CheckPermission("super_admin")) // 后台管理用
+    adminApi.PUT("/nav-config", handler.UpdateNavConfig, handler.CheckPermission("super_admin"))
 
 	// ==========================================
 	// 配置日志轮转规则

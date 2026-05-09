@@ -20,7 +20,7 @@ func InitDB() {
 	}
 
 	// 迁移
-	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{}, &model.AboutPage{})
+	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{}, &model.AboutPage{}, &model.NavConfig{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -155,5 +155,27 @@ if aboutCount == 0 {
         FootprintSubsJSON: footprintSubs,
     })
     fmt.Println("🚀 已初始化关于我们页面的默认数据！")
+}
+var navCount int64
+DB.Model(&model.NavConfig{}).Count(&navCount)
+if navCount == 0 {
+    DB.Create(&model.NavConfig{
+        ID: 1,
+        ServiceTitle1: "Service Network",
+        ServiceDesc1:  "Global technical and engineering network delivering industrial expertise worldwide.",
+        ServiceLink1:  "service_support.html#sevices",
+        ServiceTitle2: "Support Team",
+        ServiceDesc2:  "Worldwide technical team providing reliable, end-to-end support for industrial applications.",
+        ServiceLink2:  "service_support.html#sevices-team",
+        ServiceTel:    "+86 400-0316-809/0316-3210806",
+        ServiceEmail:  "info@tonfy.com",
+        AboutTitle1: "Introduction", AboutLink1: "about.html#about-intro",
+        AboutTitle2: "ESG", AboutLink2: "about.html#aboutESG",
+        AboutTitle3: "Global Footprint", AboutLink3: "about.html#about-footprint",
+        AboutTitle4: "History & Milestones", AboutLink4: "about.html#milestones",
+        TickerSymbol: "300990.SZ",
+        EmployeeCount: "2200+",
+        RdEngineerCount: "300+",
+    })
 }
 }

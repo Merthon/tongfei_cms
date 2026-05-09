@@ -20,7 +20,7 @@ func InitDB() {
 	}
 
 	// 迁移
-	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{}, &model.AboutPage{}, &model.NavConfig{})
+	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{}, &model.AboutPage{}, &model.NavConfig{}, &model.HomeConfig{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -177,5 +177,22 @@ if navCount == 0 {
         EmployeeCount: "2200+",
         RdEngineerCount: "300+",
     })
+}
+
+var homeCount int64
+DB.Model(&model.HomeConfig{}).Count(&homeCount)
+if homeCount == 0 {
+    DB.Create(&model.HomeConfig{
+        ID:              1,
+        EmpCount:        "2500",
+        RdCount:         "300",
+        LabCount:        "10",
+        ValidationHours: "15",
+        CountriesCount:  "100",
+        BottomText1:     "50+ Industries Empowered",
+        BottomText2:     "2,000+ Global Customers Trust",
+        BottomText3:     "±0.1℃ Precision Engineered",
+    })
+    fmt.Println("已初始化主页核心数据配置！")
 }
 }

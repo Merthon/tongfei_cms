@@ -74,6 +74,7 @@ func main() {
 	publicApi.GET("/front/about-page", handler.GetAboutPage)
 	// 导航
 	publicApi.GET("/front/nav-data", handler.GetFullNavData)
+	publicApi.GET("/front/home-config", handler.GetHomeConfig)
 	// ==========================================
 	// 受保护的后台 API 路由组 (含权限拦截)
 	// ==========================================
@@ -143,6 +144,9 @@ func main() {
 	// 导航
 	adminApi.GET("/nav-config", handler.GetFullNavData, handler.CheckPermission("super_admin")) // 后台管理用
     adminApi.PUT("/nav-config", handler.UpdateNavConfig, handler.CheckPermission("super_admin"))
+	// 数据
+	adminApi.GET("/home-config", handler.GetHomeConfig, handler.CheckPermission("super_admin"))
+    adminApi.PUT("/home-config", handler.UpdateHomeConfig, handler.CheckPermission("super_admin"))
 
 	// ==========================================
 	// 配置日志轮转规则

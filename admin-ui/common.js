@@ -67,11 +67,11 @@ function tryNavigate(requiredModule, targetUrl) {
 // 4. 动态注入左侧菜单和顶部导航
 // ==========================================
 function initLayout(activeMenu) {
-    // 🚨 核心逻辑：从缓存中读取当前登录人的身份
-    const role = localStorage.getItem('cms_role');
+  // 🚨 核心逻辑：从缓存中读取当前登录人的身份
+  const role = localStorage.getItem('cms_role');
 
-    // ---- 1. 拼接所有人都能看见的基础菜单 ----
-    let sidebarHtml = `
+  // ---- 1. 拼接所有人都能看见的基础菜单 ----
+  let sidebarHtml = `
         <div class="p-3 fs-5 fw-bold text-white text-center border-bottom border-secondary" style="letter-spacing: 1px;">
             TONFY CMS
         </div>
@@ -100,30 +100,33 @@ function initLayout(activeMenu) {
             <a href="javascript:void(0)" onclick="tryNavigate('application', '/admin/applications.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'applications' ? 'active bg-primary' : ''}">
                 🌍 应用场景
             </a>
+            <a href="javascript:void(0)" onclick="tryNavigate('about', '/admin/about_page.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mb-1 ${activeMenu === 'about' ? 'active bg-primary' : ''}">
+    📖 关于同飞配置
+</a>
     `;
 
-    // ---- 2. 🚨 判断身份：只有超级管理员，才拼接账号管理菜单 ----
-    if (role === 'super_admin') {
-        sidebarHtml += `
+  // ---- 2. 🚨 判断身份：只有超级管理员，才拼接账号管理菜单 ----
+  if (role === 'super_admin') {
+    sidebarHtml += `
             <a href="javascript:void(0)" onclick="tryNavigate('super_admin', '/admin/account.html')" class="list-group-item list-group-item-action bg-dark text-white border-0 rounded mt-3 ${activeMenu === 'account' ? 'active bg-danger' : ''}">
                 🛡️ 账号管理 (超管专属)
             </a>
         `;
-    }
+  }
 
-    // ---- 3. 收尾闭合标签 ----
-    sidebarHtml += `</div>`;
+  // ---- 3. 收尾闭合标签 ----
+  sidebarHtml += `</div>`;
 
-    const sidebarContainer = document.getElementById('sidebar-container');
-    if (sidebarContainer) sidebarContainer.innerHTML = sidebarHtml;
-    
-    // ---- 注入顶部导航 ----
-    const headerHtml = `
+  const sidebarContainer = document.getElementById('sidebar-container');
+  if (sidebarContainer) sidebarContainer.innerHTML = sidebarHtml;
+
+  // ---- 注入顶部导航 ----
+  const headerHtml = `
         <nav class="navbar navbar-light bg-white shadow-sm px-4">
             <span class="navbar-brand mb-0 h1 fs-5 text-muted">后台管理中心</span>
             <button class="btn btn-outline-danger btn-sm" onclick="logout()">退出登录</button>
         </nav>
     `;
-    const headerContainer = document.getElementById('header-container');
-    if (headerContainer) headerContainer.innerHTML = headerHtml;
+  const headerContainer = document.getElementById('header-container');
+  if (headerContainer) headerContainer.innerHTML = headerHtml;
 }

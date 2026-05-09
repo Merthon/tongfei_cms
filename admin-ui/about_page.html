@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>关于我们管理 - TONFY CMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .section-box { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 20px; border-left: 5px solid #0d6efd; padding-left: 15px; }
+        .preview-img { max-height: 150px; border-radius: 8px; margin-top: 10px; display: block; background: #f0f0f0; }
+        .list-item-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 10px; position: relative; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="d-flex" style="min-height: 100vh">
+        <div id="sidebar-container" class="bg-dark" style="width: 250px; flex-shrink: 0"></div>
+        <div class="flex-grow-1 d-flex flex-column">
+            <div id="header-container"></div>
+            
+            <div class="container-fluid p-4" style="max-width: 1200px;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>📖 关于我们页面配置</h3>
+                    <button class="btn btn-primary btn-lg" onclick="saveAll()">💾 保存全局更改</button>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">1. 首屏 Banner</div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Banner 标题 (支持 &lt;br&gt; 换行)</label>
+                            <textarea class="form-control" id="banner_title" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Banner 背景图</label>
+                            <input type="file" class="form-control mb-2" onchange="uploadFile(this, 'banner_image')">
+                            <input type="hidden" id="banner_image">
+                            <img id="banner_image_preview" class="preview-img">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">2. 公司简介 (视频 & 滚动文案)</div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label class="form-label">简介视频 (MP4)</label>
+                            <input type="file" class="form-control mb-2" accept="video/mp4" onchange="uploadFile(this, 'intro_video')">
+                            <input type="text" class="form-control" id="intro_video" readonly placeholder="视频路径...">
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">公司介绍段落 (每行一段)</label>
+                            <textarea class="form-control" id="intro_texts" rows="6" placeholder="输入段落，按回车分隔..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">3. 全球 ESG 战略 (三大支柱内容)</div>
+                    <div id="esg-pillars-container"></div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">4. 企业文化 (Vision/Mission/Commitment)</div>
+                    <div id="culture-container" class="row g-3"></div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-title">5. 全球足迹 (总部与海外分支)</div>
+                    <div id="footprint-container" class="row g-3"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./common.js"></script>
+    <script>
+        initLayout('about');
+        const token = localStorage.getItem('cms_token');
+        const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+        // 页面初始化加载
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch('/api/admin/about-page', { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+
+            // 填充基础字段
+            document.getElementById('banner_title').value = data.banner_title;
+            document.getElementById('banner_image').value = data.banner_image;
+            document.getElementById('banner_image_preview').src = data.banner_image;
+            document.getElementById('intro_video').value = data.intro_video;
+            
+            // 解析简介段落 (JSON 数组转为换行文本)
+            const introArr = JSON.parse(data.intro_texts_json || '[]');
+            document.getElementById('intro_texts').value = introArr.join('\n');
+
+            renderESGPillars(JSON.parse(data.esg_pillars_json || '[]'));
+            renderCulture(JSON.parse(data.culture_items_json || '[]'));
+            renderFootprint(JSON.parse(data.footprint_main_json), JSON.parse(data.footprint_subs_json || '[]'));
+        });
+
+        // 渲染 ESG (3个板块)
+        function renderESGPillars(pillars) {
+            let html = '';
+            pillars.forEach((p, i) => {
+                html += `
+                <div class="list-item-box">
+                    <div class="row">
+                        <div class="col-md-3"><input type="text" class="form-control fw-bold" value="${p.header}" id="esg_h_${i}"></div>
+                        <div class="col-md-4"><input type="text" class="form-control" value="${p.subtitle}" id="esg_s_${i}"></div>
+                        <div class="col-md-5"><textarea class="form-control" id="esg_i_${i}" rows="3">${p.items.join('\n')}</textarea></div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('esg-pillars-container').innerHTML = html;
+        }
+
+        // 渲染文化 (3个卡片)
+        function renderCulture(items) {
+            let html = '';
+            items.forEach((item, i) => {
+                html += `
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <img src="${item.img}" id="cult_prev_${i}" class="preview-img mb-2">
+                        <input type="file" class="form-control form-control-sm mb-2" onchange="uploadFile(this, 'cult_img_${i}')">
+                        <input type="hidden" id="cult_img_${i}" value="${item.img}">
+                        <input type="text" class="form-control mb-1" id="cult_t_${i}" value="${item.title}">
+                        <textarea class="form-control" id="cult_d_${i}" rows="2">${item.desc}</textarea>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('culture-container').innerHTML = html;
+        }
+
+        // 渲染足迹
+        function renderFootprint(main, subs) {
+            let html = `
+                <div class="col-12"><p class="text-primary fw-bold">总部 (Main)</p></div>
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3">
+                        <img src="${main.img}" id="fp_m_prev" class="preview-img mb-2">
+                        <input type="file" class="form-control form-control-sm mb-2" onchange="uploadFile(this, 'fp_m_img')">
+                        <input type="hidden" id="fp_m_img" value="${main.img}">
+                        <input type="text" class="form-control" id="fp_m_t" value="${main.title}">
+                        <input type="text" class="form-control mt-1" id="fp_m_d" value="${main.desc}">
+                    </div>
+                </div>
+                <div class="col-12"><p class="text-primary fw-bold">海外分支 (Subsidiaries)</p></div>
+            `;
+            subs.forEach((s, i) => {
+                html += `
+                <div class="col-md-4">
+                    <div class="card p-3">
+                        <img src="${s.img}" id="fp_s_prev_${i}" class="preview-img mb-2">
+                        <input type="file" class="form-control form-control-sm mb-2" onchange="uploadFile(this, 'fp_s_img_${i}')">
+                        <input type="hidden" id="fp_s_img_${i}" value="${s.img}">
+                        <input type="text" class="form-control mb-1" id="fp_s_y_${i}" value="${s.year}">
+                        <input type="text" class="form-control mb-1" id="fp_s_t_${i}" value="${s.title}">
+                        <input type="text" class="form-control" id="fp_s_d_${i}" value="${s.desc}">
+                    </div>
+                </div>`;
+            });
+            document.getElementById('footprint-container').innerHTML = html;
+        }
+
+        // 通用上传
+        async function uploadFile(input, targetId) {
+            const file = input.files[0];
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+            const result = await res.json();
+            document.getElementById(targetId).value = result.url;
+            if (document.getElementById(targetId + '_preview')) document.getElementById(targetId + '_preview').src = result.url;
+        }
+
+        // 保存全局更改
+        async function saveAll() {
+            // 组装复杂的 JSON 数据
+            const esgPillars = [];
+            for(let i=0; i<3; i++) {
+                esgPillars.push({
+                    header: document.getElementById(`esg_h_${i}`).value,
+                    subtitle: document.getElementById(`esg_s_${i}`).value,
+                    items: document.getElementById(`esg_i_${i}`).value.split('\n').filter(t => t.trim())
+                });
+            }
+
+            const culture = [];
+            for(let i=0; i<3; i++) {
+                culture.push({
+                    img: document.getElementById(`cult_img_${i}`).value,
+                    title: document.getElementById(`cult_t_${i}`).value,
+                    desc: document.getElementById(`cult_d_${i}`).value
+                });
+            }
+
+            const subs = [];
+            for(let i=0; i<3; i++) {
+                subs.push({
+                    img: document.getElementById(`fp_s_img_${i}`).value,
+                    year: document.getElementById(`fp_s_y_${i}`).value,
+                    title: document.getElementById(`fp_s_t_${i}`).value,
+                    desc: document.getElementById(`fp_s_d_${i}`).value
+                });
+            }
+
+            const payload = {
+                banner_image: document.getElementById('banner_image').value,
+                banner_title: document.getElementById('banner_title').value,
+                intro_video: document.getElementById('intro_video').value,
+                intro_texts_json: JSON.stringify(document.getElementById('intro_texts').value.split('\n').filter(t => t.trim())),
+                esg_pillars_json: JSON.stringify(esgPillars),
+                culture_items_json: JSON.stringify(culture),
+                footprint_main_json: JSON.stringify({
+                    img: document.getElementById('fp_m_img').value,
+                    title: document.getElementById('fp_m_t').value,
+                    desc: document.getElementById('fp_m_d').value
+                }),
+                footprint_subs_json: JSON.stringify(subs)
+            };
+
+            const res = await fetch('/api/admin/about-page', { method: 'PUT', headers, body: JSON.stringify(payload) });
+            if (res.ok) alert('🎉 关于我们页面更新成功！');
+        }
+    </script>
+</body>
+</html>

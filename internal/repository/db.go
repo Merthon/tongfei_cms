@@ -20,7 +20,7 @@ func InitDB() {
 	}
 
 	// 迁移
-	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{})
+	err = DB.AutoMigrate(&model.News{}, &model.Product{}, &model.Category{}, &model.Job{}, &model.JobApplication{}, &model.Banner{}, &model.ContactMessage{}, &model.AdminUser{}, &model.ServicePage{}, &model.Application{}, &model.AboutPage{})
 	if err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -107,6 +107,53 @@ func InitDB() {
     for _, app := range apps {
         DB.Create(&app)
     }
-    fmt.Println("🚀 已强制清空旧数据，并成功导入 10 条真实应用场景！")
+    fmt.Println(" 已强制清空旧数据，并成功导入 10 条真实应用场景！")
     // ======================================================
+	var aboutCount int64
+DB.Model(&model.AboutPage{}).Count(&aboutCount)
+if aboutCount == 0 {
+    // 准备各个板块的初始 JSON 数据
+    introTexts := `["TONFY, a global leader in industrial temperature control...","The company established its first subsidiary, ATF Cooling GmbH...","TONFY boasts an annual production capacity of 300,000 units...","Committed to delivering professional and stable industrial...","Its products and solutions are mainly applied in fields..."]`
+    
+    esgPillars := `[
+        {"header":"Environment","subtitle":"Product, Factory, Supply Chain<br>Green Practices","items":["Eco-friendly product design energy efficiency low-GWP refrigerants","Green Factories low-carbon manufacturing","Lifecycle impact minimization design — operation — disposal"]},
+        {"header":"Social","subtitle":"Employee, Customer, Community<br>Responsibility","items":["Safe & healthy workplace (ISO 45001)","Employee supply chain management","Customer support & engagement","ISO 9001 / 14001 / 50001"]},
+        {"header":"Governance","subtitle":"International Management System<br>& Risk Control","items":["Compliance with CE, RoHS, REACH","Transparent reporting & ESG disclosure","Risk management across global operations"]}
+    ]`
+    
+    esgBottom := `[
+        {"title":"Product Certifications<br>& Standards","desc":"CE, UL, IEC/EN, IEEN, ISO Series"},
+        {"title":"Global Service Network","desc":"Cross-timezone, Multi-language Spare Parts Guarantee"},
+        {"title":"Supply Chain Transparency<br>& Responsibility","desc":"CE, UL, IEC/EN, IEEN, ISO Series"},
+        {"title":"Data & Targets Disclosure","desc":"Carbon Reduction Energy Efficiency improvement Sustainability Report"}
+    ]`
+
+    cultureItems := `[
+        {"img":"./assets/images/about/sec2-1.webp","title":"Vision","desc":"Leading thermal solutions for future industry."},
+        {"img":"./assets/images/about/sec2-2.webp","title":"Mission","desc":"Reliable temperature control for crucial systems."},
+        {"img":"./assets/images/about/sec2-3.webp","title":"Commitment","desc":"Sustainable growth and responsive service network."}
+    ]`
+
+    footprintMain := `{"img":"./assets/images/about/sec3_1.webp","title":"Sanhe, Hebei","desc":"TONFY Headquarters"}`
+    
+    footprintSubs := `[
+        {"img":"./assets/images/about/sec3-2.webp","year":"2017","title":"Germany","desc":"European Subsidiary Established"},
+        {"img":"./assets/images/about/sec3-3.webp","year":"2025","title":"Singapore","desc":"APAC Headquarters"},
+        {"img":"./assets/images/about/sec3-4.webp","year":"2025","title":"Thailand","desc":"Regional Manufacturing Hub"}
+    ]`
+
+    DB.Create(&model.AboutPage{
+        ID: 1,
+        BannerImage: "./assets/images/about/about_bg.webp",
+        BannerTitle: "GLOBAL LEADER IN INDUSTRIAL<br>TEMPERATURE CONTROL SOLUTIONS",
+        IntroVideo: "./assets/videos/english.mp4",
+        IntroTextsJSON: introTexts,
+        ESGPillarsJSON: esgPillars,
+        ESGBottomCardsJSON: esgBottom,
+        CultureItemsJSON: cultureItems,
+        FootprintMainJSON: footprintMain,
+        FootprintSubsJSON: footprintSubs,
+    })
+    fmt.Println("🚀 已初始化关于我们页面的默认数据！")
+}
 }

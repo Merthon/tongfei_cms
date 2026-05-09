@@ -69,6 +69,9 @@ func main() {
 
 	// 应用场景
 	publicApi.GET("/front/applications", handler.GetAppScenarios)
+
+	// 关于
+	publicApi.GET("/front/about-page", handler.GetAboutPage)
 	// ==========================================
 	// 受保护的后台 API 路由组 (含权限拦截)
 	// ==========================================
@@ -130,6 +133,10 @@ func main() {
 	// 应用场景管理
     adminApi.GET("/applications", handler.GetAppScenarios, handler.CheckPermission("application"))
     adminApi.PUT("/applications/:id", handler.UpdateAppScenario, handler.CheckPermission("application"))
+
+	// 关于页面管理
+	adminApi.GET("/about-page", handler.GetAboutPage, handler.CheckPermission("about"))
+    adminApi.PUT("/about-page", handler.UpdateAboutPage, handler.CheckPermission("about"))
 
 	// ==========================================
 	// 配置日志轮转规则

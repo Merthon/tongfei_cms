@@ -7,6 +7,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+    "tonfy_CMS/internal/util"
 )
 
 var DB *gorm.DB
@@ -27,17 +28,28 @@ func InitDB() {
 
 	log.Println("数据库连接并且迁移成功！")
 
+    // 创建
 	var count int64
 	DB.Model(&model.AdminUser{}).Count(&count)
+	
 	if count == 0 {
-		boss := model.AdminUser{
-			Username: "admin",
-			Password: "123456", // 保持你之前的测试密码
-			Role:     "super_admin",
-			Modules:  "all",
+		newUsername := "admintonfy"  
+		newPassword := "SHtonfy@2026"    
+
+		hashedPassword, err := util.HashPassword(newPassword)
+		if err != nil {
+			log.Fatalf("初始化密码加密失败: %v", err)
 		}
+
+		boss := model.AdminUser{
+			Username: newUsername,
+			Password: hashedPassword,
+			Role:     "super_admin",
+			Modules:  "user,banner,category,product,application,about,nav_config,home_config", 
+		}
+		
 		DB.Create(&boss)
-		fmt.Println("🚀 已自动生成超级管理员账号: admin / 123456")
+		fmt.Printf("🚀 新超级管理员初始化成功！\n账号: %s\n", newUsername)
 	}
 	// 初始化 Application 默认数据
 	var applicationCount int64

@@ -8,6 +8,7 @@ import (
 	"tonfy_CMS/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"tonfy_CMS/internal/util"
 )
 
 // CheckPermission 权限拦截中间件
@@ -73,10 +74,11 @@ func CreateEditor(c echo.Context) error {
 		return c.JSON(http.StatusConflict, map[string]string{"error": "该账号名称已存在，请换一个"})
 	}
 
+	hashedPassword, _ := util.HashPassword(req.Password)
 	// 3. 组装新账号（强制将 Role 设为 editor，防止越权创建超管）
 	newEditor := model.AdminUser{
 		Username: req.Username,
-		Password: req.Password, 
+		Password: hashedPassword, 
 		Role:     "editor",
 		Modules:  req.Modules,
 	}
@@ -156,7 +158,9 @@ func UpdateEditor(c echo.Context) error {
 	}
 
 	if req.Password != "" {
-		user.Password = req.Password
+		// 如果管理员修改了密码，必须加密后再存
+		hashedPassword, _ := util.HashPassword(req.Password)
+		user.Password = hashedPassword
 	}
 	// 更新权限模块
 	user.Modules = req.Modules

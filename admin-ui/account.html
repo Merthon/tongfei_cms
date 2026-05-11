@@ -30,6 +30,18 @@
                                 <input type="password" id="newPassword" class="form-control" required>
                             </div>
                             <div class="mb-4 p-2 border rounded bg-light small">
+    <label class="fw-bold d-block mb-2">分配权限：</label>
+    <div class="row g-2">
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="news"> 新闻模块</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="product"> 产品与行业</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="job"> 招聘管理</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="banner"> 首页 Banner</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="application"> 应用场景</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="about"> 关于同飞</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="nav_config"> 导航配置</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="home_config"> 主页大盘</div></div>
+    </div>
+</div>
                                 <label class="fw-bold d-block mb-2">分配权限：</label>
                                 <div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="news"> 新闻模块</div>
                                 <div class="form-check"><input class="form-check-input" type="checkbox" name="modules" value="product"> 产品与行业</div>
@@ -76,12 +88,18 @@
                         <input type="text" id="editPassword" class="form-control" placeholder="输入新密码">
                     </div>
                     <div class="mb-3 p-3 border rounded bg-light">
-                        <label class="form-label fw-bold d-block mb-3">重新分配权限：</label>
-                        <div class="form-check form-check-inline"><input class="form-check-input edit-chk" type="checkbox" value="news"> 新闻</div>
-                        <div class="form-check form-check-inline"><input class="form-check-input edit-chk" type="checkbox" value="product"> 产品</div>
-                        <div class="form-check form-check-inline"><input class="form-check-input edit-chk" type="checkbox" value="job"> 招聘</div>
-                        <div class="form-check form-check-inline"><input class="form-check-input edit-chk" type="checkbox" value="banner"> Banner</div>
-                    </div>
+    <label class="form-label fw-bold d-block mb-3">重新分配权限：</label>
+    <div class="row g-2">
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="news"> 新闻模块</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="product"> 产品与行业</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="job"> 招聘管理</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="banner"> 首页 Banner</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="application"> 应用场景</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="about"> 关于同飞</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="nav_config"> 导航配置</div></div>
+        <div class="col-6"><div class="form-check"><input class="form-check-input edit-chk" type="checkbox" value="home_config"> 主页大盘</div></div>
+    </div>
+</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>

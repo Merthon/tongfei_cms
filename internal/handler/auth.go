@@ -8,6 +8,7 @@ import (
 	"tonfy_CMS/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+    "tonfy_CMS/internal/util"
 )
 
 // 定义用于接收前端账号密码的结构体
@@ -28,7 +29,12 @@ func Login(c echo.Context) error {
 
     // 去数据库里找这个账号
     var user model.AdminUser
-    if err := repository.DB.Where("username = ? AND password = ?", req.Username, req.Password).First(&user).Error; err != nil {
+    if err := repository.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+        return c.JSON(http.StatusUnauthorized, map[string]string{"error": "账号或密码错误"})
+    }
+
+    // 拿出数据库里的哈希密文，和前端传来的明文密码比对
+    if !util.CheckPasswordHash(req.Password, user.Password) {
         return c.JSON(http.StatusUnauthorized, map[string]string{"error": "账号或密码错误"})
     }
 
